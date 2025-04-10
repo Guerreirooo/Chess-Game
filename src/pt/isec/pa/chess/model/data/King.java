@@ -6,9 +6,22 @@ import java.util.List;
 public class King extends Piece {
     private boolean noMove;
 
-    King(Board board, int row, ColumnType column, PieceColor color) {
-        super(board, row, column, color);
+    King(Board board, PiecePosition position, PieceColor color) {
+        super(board, position, color);
         noMove = true;
+    }
+
+    King(Board board, PiecePosition position, PieceColor color, boolean firstMove) {
+        super(board, position, color);
+        noMove = firstMove;
+    }
+
+    public void alreadyMoved() {
+        noMove = false;
+    }
+
+    public boolean getNoMove() {
+        return noMove;
     }
 
     @Override
@@ -17,7 +30,7 @@ public class King extends Piece {
     }
 
     @Override
-    String getPosition() {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         if (getColor() == PieceColor.WHITE) {
@@ -26,7 +39,7 @@ public class King extends Piece {
         else {
             sb.append("k");
         }
-        sb.append(super.getPosition());
+        sb.append(super.toString());
 
         if (noMove) {
             sb.append("*");
@@ -35,7 +48,7 @@ public class King extends Piece {
     }
 
     @Override
-    public List<String> possibleMoves() {
+    public List<String> getPossibleMoves() {
         List<String> possibleMoves = new ArrayList<>();
         int auxRow = getRow();
         int auxCol = getColumn().equivalente();

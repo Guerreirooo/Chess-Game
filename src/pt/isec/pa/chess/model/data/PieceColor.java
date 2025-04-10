@@ -1,5 +1,13 @@
 package pt.isec.pa.chess.model.data;
 
 public enum PieceColor {
-    BLACK, WHITE
+    BLACK, WHITE;
+
+    static PieceColor translate(String representation) {
+        return switch (representation) {
+            case "BLACK" -> BLACK;
+            case "WHITE" -> WHITE;
+            default -> null;
+        };
+    }
 }

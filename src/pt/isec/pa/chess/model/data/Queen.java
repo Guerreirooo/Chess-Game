@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Queen extends Piece {
-    Queen(Board board, int row, ColumnType column, PieceColor color) {
-        super(board, row, column, color);
+    Queen(Board board, PiecePosition position, PieceColor color) {
+        super(board, position, color);
     }
 
     @Override
@@ -14,7 +14,7 @@ public class Queen extends Piece {
     }
 
     @Override
-    String getPosition() {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         if (getColor() == PieceColor.WHITE) {
@@ -23,12 +23,12 @@ public class Queen extends Piece {
         else {
             sb.append("q");
         }
-        sb.append(super.getPosition());
+        sb.append(super.toString());
         return sb.toString();
     }
 
     @Override
-    public List<String> possibleMoves() {
+    public List<String> getPossibleMoves() {
         List<String> possibleMoves = new ArrayList<>();
         int auxRow = getRow();
         int auxCol = getColumn().equivalente();

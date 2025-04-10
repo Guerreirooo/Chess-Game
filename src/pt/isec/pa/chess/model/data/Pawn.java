@@ -6,8 +6,8 @@ import java.util.List;
 public class Pawn extends Piece {
     private boolean move;
 
-    Pawn(Board board, int row, ColumnType column, PieceColor color) {
-        super(board, row, column, color);
+    Pawn(Board board, PiecePosition position, PieceColor color) {
+        super(board, position, color);
         move = false;
     }
 
@@ -17,7 +17,7 @@ public class Pawn extends Piece {
     }
 
     @Override
-    String getPosition() {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         if (getColor() == PieceColor.WHITE) {
@@ -27,12 +27,12 @@ public class Pawn extends Piece {
             sb.append("p");
         }
 
-        sb.append(super.getPosition());
+        sb.append(super.toString());
         return sb.toString();
     }
 
     @Override
-    public List<String> possibleMoves() {
+    public List<String> getPossibleMoves() {
         List<String> possibleMoves = new ArrayList<>();
         int auxRow = getRow();
         int auxCol = getColumn().equivalente();

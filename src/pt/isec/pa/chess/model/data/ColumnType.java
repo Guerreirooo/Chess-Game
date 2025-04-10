@@ -29,4 +29,18 @@ public enum ColumnType {
             default -> null;
         };
     }
+
+    static ColumnType letra(String letra){
+        return switch (letra) {
+            case "a" -> a;
+            case "b" -> b;
+            case "c" -> c;
+            case "d" -> d;
+            case "e" -> e;
+            case "f" -> f;
+            case "g" -> g;
+            case "h" -> h;
+            default -> null;
+        };
+    }
 }

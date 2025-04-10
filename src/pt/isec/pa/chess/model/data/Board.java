@@ -1,60 +1,145 @@
 package pt.isec.pa.chess.model.data;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Board {
+public class Board implements Serializable {
     private List<Piece> Pieces;
 
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     public Board() {
-        initGame();
+        Pieces = new ArrayList<>();
+        //initGame();
+        //PieceType.KING.createPiece(this, new PiecePosition(4, ColumnType.h), PieceColor.BLACK);
+    }
+
+    public Board(Board b) {
+        Pieces = new ArrayList<>();
+        for (Piece p: b.Pieces) {
+            addPiece(p.getPieceType(), p.getRow(), p.getColumn(), p.getColor());
+        }
+        //initGame();
+        //PieceType.KING.createPiece(this, new PiecePosition(4, ColumnType.h), PieceColor.BLACK);
     }
 
     public void initGame(){
         Pieces = new ArrayList<>();
-        Pieces.add(PieceType.ROOK.createPiece(this, 1, ColumnType.h,  PieceColor.BLACK));
-        Pieces.add(PieceType.KNIGHT.createPiece(this, 1, ColumnType.g, PieceColor.BLACK));
-        Pieces.add(PieceType.BISHOP.createPiece(this, 1, ColumnType.f, PieceColor.BLACK));
-        Pieces.add(PieceType.QUEEN.createPiece(this, 1, ColumnType.e, PieceColor.BLACK));
-        Pieces.add(PieceType.KING.createPiece(this, 1, ColumnType.d, PieceColor.BLACK));
-        Pieces.add(PieceType.BISHOP.createPiece(this, 1, ColumnType.c, PieceColor.BLACK));
-        Pieces.add(PieceType.KNIGHT.createPiece(this, 1, ColumnType.b, PieceColor.BLACK));
-        Pieces.add(PieceType.ROOK.createPiece(this, 1, ColumnType.a, PieceColor.BLACK));
+        addPiece(PieceType.ROOK, new PiecePosition(1, ColumnType.h),  PieceColor.BLACK);
+        addPiece(PieceType.KNIGHT, new PiecePosition(1, ColumnType.g), PieceColor.BLACK);
+        addPiece(PieceType.BISHOP, new PiecePosition(1, ColumnType.f), PieceColor.BLACK);
+        addPiece(PieceType.QUEEN, new PiecePosition(1, ColumnType.d), PieceColor.BLACK);
+        addPiece(PieceType.KING, new PiecePosition(1, ColumnType.e), PieceColor.BLACK);
+        addPiece(PieceType.BISHOP, new PiecePosition(1, ColumnType.c), PieceColor.BLACK);
+        addPiece(PieceType.KNIGHT, new PiecePosition(1, ColumnType.b), PieceColor.BLACK);
+        addPiece(PieceType.ROOK, new PiecePosition(1, ColumnType.a), PieceColor.BLACK);
 
-        for(ColumnType c : ColumnType.values()){
-            Pieces.add(PieceType.PAWN.createPiece(this, 2, c, PieceColor.BLACK));
-            Pieces.add(PieceType.PAWN.createPiece(this, 7, c, PieceColor.WHITE));
-        }
+        /*for(ColumnType c : ColumnType.values()){
+            addPiece(PieceType.PAWN, new PiecePosition(2, c), PieceColor.BLACK);
+            addPiece(PieceType.PAWN, new PiecePosition(7, c), PieceColor.WHITE);
+        }*/
 
-        Pieces.add(PieceType.ROOK.createPiece(this, 8, ColumnType.h, PieceColor.WHITE));
-        Pieces.add(PieceType.KNIGHT.createPiece(this, 8, ColumnType.g, PieceColor.WHITE));
-        Pieces.add(PieceType.BISHOP.createPiece(this, 8, ColumnType.f, PieceColor.WHITE));
-        Pieces.add(PieceType.QUEEN.createPiece(this, 8, ColumnType.e, PieceColor.WHITE));
-        Pieces.add(PieceType.KING.createPiece(this, 8, ColumnType.d, PieceColor.WHITE));
-        Pieces.add(PieceType.BISHOP.createPiece(this, 8, ColumnType.c, PieceColor.WHITE));
-        Pieces.add(PieceType.KNIGHT.createPiece(this, 8, ColumnType.b, PieceColor.WHITE));
-        Pieces.add(PieceType.ROOK.createPiece(this, 8, ColumnType.a, PieceColor.WHITE));
+        addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.h), PieceColor.WHITE);
+        addPiece(PieceType.KNIGHT, new PiecePosition(8, ColumnType.g), PieceColor.WHITE);
+        addPiece(PieceType.BISHOP, new PiecePosition(8, ColumnType.f), PieceColor.WHITE);
+        addPiece(PieceType.KING, new PiecePosition(8, ColumnType.e), PieceColor.WHITE);
+        addPiece(PieceType.QUEEN, new PiecePosition(8, ColumnType.d), PieceColor.WHITE);
+        addPiece(PieceType.BISHOP, new PiecePosition(8, ColumnType.c), PieceColor.WHITE);
+        addPiece(PieceType.KNIGHT, new PiecePosition(8, ColumnType.b), PieceColor.WHITE);
+        addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.a), PieceColor.WHITE);
     }
 
-    public void show(){
+    void addPiece(PieceType pt, int row, ColumnType col, PieceColor color) {
+        if (row < 1 || row > 8) {
+            return;
+        }
+        Pieces.add(pt.createPiece(this, new PiecePosition(row, col), color));
+    }
+
+    void addPiece(PieceType pt, PiecePosition pos, PieceColor color) {
+        Pieces.add(pt.createPiece(this, pos, color));
+    }
+
+    void addPiece(String piece) {
+        Piece temp = PieceType.createPiece(this, piece);
+        if (temp != null) {
+            Pieces.add(temp);
+        }
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
         Piece p;
         for(int i = 1; i <= 8; i++){
             for(ColumnType c : ColumnType.values()){
                 p = getPiece(i, c);
                 if(p != null){
-                    System.out.print(p.getPosition() + " ");
+                    sb.append(p).append(" ");
                 }
                 else {
-                    System.out.print(" __ ");
+                    sb.append(" __ ");
                 }
             }
-            System.out.println("\n");
+            sb.append("\n");
         }
+        return sb.toString();
+    }
+
+    boolean moveWithoutConfirmation(Piece piece, int row, ColumnType col) {
+        if (row > 8 || row < 1 || piece == null) {
+            return false;
+        }
+
+        PieceColor color = checkColorPosition(row, col);
+        String nextMove = col.toString() + row;
+
+        if (color == null) {
+            piece.setRow(row);
+            piece.setCol(col);
+            return true;
+        }
+        else if (color == piece.getColor()) {
+            return false;
+        }
+        else if (checkColorPosition(row, col) != piece.getColor()) {
+            piece.setRow(row);
+            piece.setCol(col);
+            remove(getPiece(row, col));
+            return true;
+        }
+
+        return true;
     }
 
     boolean move(Piece piece, int row, ColumnType col) {
-        piece.setRow(row);
-        piece.setCol(col);
-        return true;
+        if (row > 8 || row < 1 || piece == null) {
+            return false;
+        }
+
+        PieceColor color = checkColorPosition(row, col);
+        String nextMove = col.toString() + row;
+
+        for (String moves: getPossibleMoves(piece.getRow(), piece.getColumn())) {
+            if (moves.equals(nextMove) && color == null) {
+                piece.setRow(row);
+                piece.setCol(col);
+                return true;
+            }
+            else if (moves.equals(nextMove) && color == piece.getColor()) {
+                return false;
+            }
+            else if (moves.equals(nextMove) && checkColorPosition(row, col) != piece.getColor()) {
+                piece.setRow(row);
+                piece.setCol(col);
+                remove(getPiece(row, col));
+                return true;
+            }
+        }
+
+        return false;
     }
 
     Piece getPiece(int row, ColumnType col) {
@@ -67,7 +152,7 @@ public class Board {
     }
 
     public List<String> getPossibleMoves(int row, ColumnType col) {
-        return getPiece(row, col) == null ? new ArrayList<>(): getPiece(row, col).possibleMoves();
+        return getPiece(row, col) == null ? new ArrayList<>(): getPiece(row, col).getPossibleMoves();
     }
 
     public boolean checkPiecesPosition(int row, ColumnType col) {
@@ -89,17 +174,168 @@ public class Board {
     }
 
     String getPos(Piece piece) {
-        return piece.getPosition();
+        return piece.toString();
     }
 
-    String getPos(PieceType pieceType, PieceColor color) {
-        StringBuilder sb = new StringBuilder();
+    PiecePosition getPos(PieceType pieceType, PieceColor color) {
+        PiecePosition position;
         for (Piece p: Pieces) {
             if (p.getPieceType() == pieceType && p.getColor() == color) {
-                sb.append(p.getPosition()).append(" ");
+                return new PiecePosition(p.getRow(), p.getColumn());
             }
         }
-        return sb.toString();
+        return null;
+    }
+
+    public boolean checkMate() {
+        for (Piece p : Pieces) {
+            if (p.getPieceType() == PieceType.KING) {
+                if(!checkStopCheckMate(p.getColor())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean checkStopCheckMate(PieceColor kingColor) {
+        Board bTemp = new Board(this);
+        Board bTempCopy = new Board(bTemp);
+
+        for (Piece p: bTemp.getPiecesList()) {
+            if (p.getColor() != kingColor) {
+                continue;
+            }
+
+            for (String move: p.getPossibleMoves()) {
+                ColumnType col = ColumnType.letra(move.split("")[0]);
+                int row = Integer.parseInt(move.split("")[1]);
+                bTempCopy.moveWithoutConfirmation(p, row, col);
+                if (!check(kingColor, bTempCopy)) {
+                    return true;
+                }
+                bTempCopy = new Board(bTemp);
+            }
+        }
+        return false;
+    }
+
+    public boolean check(PieceColor playerColor, Board b) {
+        PiecePosition kingPos = getPos(PieceType.KING,playerColor);
+        List<String>pieceMoves = new ArrayList<>();
+
+        for(Piece p: b.Pieces) {
+            if(p.getColor() != playerColor){
+                pieceMoves = p.getPossibleMoves();
+                for (String move : pieceMoves) {
+                    if(move.equals(kingPos.toString())){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean check(PieceColor playerColor) {
+        PiecePosition kingPos = getPos(PieceType.KING,playerColor);
+        List<String>pieceMoves = new ArrayList<>();
+
+        for(Piece p: Pieces) {
+            if(p.getColor() != playerColor){
+                pieceMoves = p.getPossibleMoves();
+                for (String move : pieceMoves) {
+                    if(move.equals(kingPos.toString())){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    boolean promotePawn(Piece p, PieceType type) {
+        if(type == PieceType.KING || type == PieceType.PAWN || type == null){
+            return false;
+        }
+        if(remove(p)){
+            addPiece(type, new PiecePosition(p.getRow(), p.getColumn()), p.getColor());
+            return true;
+        }
+        return false;
+    }
+
+    boolean roque(Piece rei, Piece torre){
+        King reiTemp = (King) rei;
+        Rook torreTemp = (Rook) torre;
+
+        if(reiTemp.getRow() != torreTemp.getRow()){
+            return false;
+        }
+        if(reiTemp.getNoMove() && torreTemp.getNoMove()){
+            if(torreTemp.getColumn() == ColumnType.a && getPiece(torreTemp.getRow(), ColumnType.b) == null && getPiece(torreTemp.getRow(), ColumnType.c) == null && getPiece(torreTemp.getRow(), ColumnType.d) == null){
+                ((King) rei).alreadyMoved();
+                ((Rook) torre).alreadyMoved();
+                return true;
+            }
+            else if(torreTemp.getColumn() == ColumnType.h && getPiece(torreTemp.getRow(), ColumnType.g) == null && getPiece(torreTemp.getRow(), ColumnType.f) == null){
+                ((King) rei).alreadyMoved();
+                ((Rook) torre).alreadyMoved();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean lackOfMaterial(){
+        int contador = 0;
+        for(Piece p : Pieces){
+            if(p.getPieceType() == PieceType.QUEEN){
+                return false;
+            }
+            contador++;
+        }
+        if(contador == 3){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean drownedKing(){
+        PieceColor kingColor = PieceColor.WHITE;
+        List<String> possibleMovesRei = new ArrayList<>();
+        List<String> possibleMovesReiTemp = new ArrayList<>();
+        List<String> possibleMovesTemp = new ArrayList<>();
+        for(int i = 0; i < 2; i++) {
+            for (Piece p : Pieces) {
+                if (p.getPieceType() == PieceType.KING && p.getColor() == kingColor) {
+                    possibleMovesRei = p.getPossibleMoves();
+                }
+            }
+
+            for (Piece p : Pieces) {
+                if (p.getColor() != kingColor) {
+                    possibleMovesTemp = p.getPossibleMoves();
+                    for (String move : possibleMovesTemp) {
+                        possibleMovesReiTemp.clear();
+                        possibleMovesReiTemp.addAll(possibleMovesRei);
+                        for (String possibleMove : possibleMovesReiTemp) {
+                            if (move.equals(possibleMove) || possibleMove.equals(p.getColumn() + "" + p.getRow())) {
+                                possibleMovesRei.remove(possibleMove);
+
+                            }
+                        }
+                        if (possibleMovesRei.isEmpty()) {
+                            if (!check(kingColor)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            kingColor = PieceColor.BLACK;
+        }
+        return false;
     }
 
     boolean remove(int row, ColumnType col) {
@@ -118,5 +354,9 @@ public class Board {
 
     boolean remove(Piece piece) {
         return Pieces.remove(piece);
+    }
+
+    List<Piece> getPiecesList() {
+        return Pieces;
     }
 }

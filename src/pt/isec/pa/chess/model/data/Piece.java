@@ -1,30 +1,38 @@
 package pt.isec.pa.chess.model.data;
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 
-abstract class Piece {
-    private ColumnType column;
-    private int row;
+abstract class Piece implements Serializable {
+    private PiecePosition position;
     private PieceColor color;
     private Board board;
 
-    public Piece(Board board, int row, ColumnType column, PieceColor color) {
-        if (row < 1  || row > 8) {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    public Piece(Board board, PiecePosition position, PieceColor color) {
+        if (position.getRow() < 1 || position.getRow() > 8) {
             return;
         }
-        this.column = column;
-        this.row = row;
+        this.position = position;
         this.color = color;
         this.board = board;
     }
 
-    public abstract List<String> possibleMoves();
+    public void changeBoard(Board b) {
+        board = b;
+    }
+
+    public abstract List<String> getPossibleMoves();
 
     abstract PieceType getPieceType();
 
-    String getPosition() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(column).append(row);
-        return sb.toString();
+    @Override
+    public String toString() {
+        String sb;
+        sb = position.getColumn().toString() + position.getRow();
+        return sb;
     }
 
     boolean checkPieceOnBoard(int row, ColumnType column) {
@@ -40,25 +48,27 @@ abstract class Piece {
     }
 
     ColumnType getColumn() {
-        return column;
+        return position.getColumn();
     }
 
     int getRow() {
-        return row;
+        return position.getRow();
     }
 
     void setRow(int row) {
         if (row < 1 || row > 8) {
             return;
         }
-        this.row = row;
+        this.position.setRow(row);
     }
 
     void setCol(ColumnType col) {
-        this.column = col;
+        this.position.setColumn(col);
     }
 
     boolean checkMove(List<String> possibleMoves, int auxRow, int auxCol, boolean... checkOpponentPieces) {
+        StringBuilder sb = new StringBuilder();
+
         if (auxRow > 8 || auxRow < 1 || auxCol > 8 || auxCol < 1) {
             return false;
         }
@@ -68,7 +78,6 @@ abstract class Piece {
         // (será útil para o peão andar para a frente)
         if (checkOpponentPieces.length == 1 && checkOpponentPieces[0]) {
             if (!checkPieceOnBoard(auxRow, ColumnType.letra(auxCol))) {
-                StringBuilder sb = new StringBuilder();
                 possibleMoves.add(sb.append(ColumnType.letra(auxCol)).append(auxRow).toString());
                 return true;
             }
@@ -78,19 +87,16 @@ abstract class Piece {
         // (será útil para o peão comer as peças de lado)
         else if (checkOpponentPieces.length == 2 && checkOpponentPieces[1] && checkColor(auxRow, ColumnType.letra(auxCol)) != getColor()) {
             if (checkPieceOnBoard(auxRow, ColumnType.letra(auxCol))) {
-                StringBuilder sb = new StringBuilder();
                 possibleMoves.add(sb.append(ColumnType.letra(auxCol)).append(auxRow).toString());
                 return true;
             }
         }
         else {
             if (!checkPieceOnBoard(auxRow, ColumnType.letra(auxCol))) {
-                StringBuilder sb = new StringBuilder();
                 possibleMoves.add(sb.append(ColumnType.letra(auxCol)).append(auxRow).toString());
                 return true;
             }
             else if (checkPieceOnBoard(auxRow, ColumnType.letra(auxCol)) && checkColor(auxRow, ColumnType.letra(auxCol)) != getColor()) {
-                StringBuilder sb = new StringBuilder();
                 possibleMoves.add(sb.append(ColumnType.letra(auxCol)).append(auxRow).toString());
                 return false;
             }
