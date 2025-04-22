@@ -1,15 +1,13 @@
 package pt.isec.pa.chess;
 
-import pt.isec.pa.chess.model.data.ChessGame;
-import pt.isec.pa.chess.model.data.ChessGameSerialization;
-import pt.isec.pa.chess.model.data.ColumnType;
-import pt.isec.pa.chess.model.data.PieceColor;
-
-import java.io.IOException;
+import javafx.application.Application;
+import pt.isec.pa.chess.ui.MainJFX;
 
 public class ChessMain {
     public static void main(String[] args) {
         System.out.println("PA Chess Game");
+        Application.launch(MainJFX.class, args);
+        /*
         ChessGame chessgame = new ChessGame();
         chessgame.board.initGame();
         System.out.println(chessgame);
@@ -19,13 +17,13 @@ public class ChessMain {
         }*/
 
         /*System.out.println(game.board);*/
-        //ChessGameSerialization.savePartialGame("teste.txt", chessgame);
-        ChessGameSerialization.save("teste.txt", chessgame);
+        /*ChessGameSerialization.save("teste.txt", chessgame);
 
         String coiso = "BLACK,\n" +
                 "Ra1*,Nb1,Bc1,Ke1*,Ng1,Rh1*,Pa2,Pb2,Pc2,Pd2,Pf2,Pg2,Ph2,\n" +
                 "Qf3,Bc4,Pe4,qh4,pe5,pa7,pb7,pc7,pd7,pf7,pg7,ph7,ra8*,nb8,\n" +
                 "bc8,ke8*,bf8,ng8,rh8*";
+
 
 
         System.out.println(chessgame.move(1, ColumnType.a, 2, ColumnType.b));
@@ -43,9 +41,7 @@ public class ChessMain {
         }
 
         System.out.println(chessgame);
-        //chessgame.loadPartialGame(coiso);
         //System.out.println(chessgame.board);
-        //System.out.println(chessgame.savePartialGame());
-        System.out.println(chessgame.board.checkMate());
+        System.out.println(chessgame.board.checkMate());*/
     }
 }

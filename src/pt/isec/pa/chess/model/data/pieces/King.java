@@ -1,4 +1,8 @@
-package pt.isec.pa.chess.model.data;
+package pt.isec.pa.chess.model.data.pieces;
+
+import pt.isec.pa.chess.model.data.Board;
+import pt.isec.pa.chess.model.data.PieceColor;
+import pt.isec.pa.chess.model.data.PieceType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +15,7 @@ public class King extends Piece {
         noMove = true;
     }
 
-    King(Board board, PiecePosition position, PieceColor color, boolean firstMove) {
+    public King(Board board, PiecePosition position, PieceColor color, boolean firstMove) {
         super(board, position, color);
         noMove = firstMove;
     }
@@ -25,7 +29,7 @@ public class King extends Piece {
     }
 
     @Override
-    PieceType getPieceType() {
+    public PieceType getPieceType() {
         return PieceType.KING;
     }
 

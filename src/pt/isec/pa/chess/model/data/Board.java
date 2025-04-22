@@ -1,4 +1,7 @@
 package pt.isec.pa.chess.model.data;
+
+import pt.isec.pa.chess.model.data.pieces.*;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;

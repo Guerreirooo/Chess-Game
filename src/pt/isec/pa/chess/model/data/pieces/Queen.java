@@ -1,15 +1,19 @@
-package pt.isec.pa.chess.model.data;
+package pt.isec.pa.chess.model.data.pieces;
+
+import pt.isec.pa.chess.model.data.Board;
+import pt.isec.pa.chess.model.data.PieceColor;
+import pt.isec.pa.chess.model.data.PieceType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Queen extends Piece {
-    Queen(Board board, PiecePosition position, PieceColor color) {
+    public Queen(Board board, PiecePosition position, PieceColor color) {
         super(board, position, color);
     }
 
     @Override
-    PieceType getPieceType() {
+    public PieceType getPieceType() {
         return PieceType.QUEEN;
     }
 

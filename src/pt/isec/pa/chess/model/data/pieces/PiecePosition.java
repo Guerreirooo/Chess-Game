@@ -1,4 +1,6 @@
-package pt.isec.pa.chess.model.data;
+package pt.isec.pa.chess.model.data.pieces;
+
+import pt.isec.pa.chess.model.data.ColumnType;
 
 import java.io.Serial;
 import java.io.Serializable;

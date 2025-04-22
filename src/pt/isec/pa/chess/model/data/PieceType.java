@@ -1,9 +1,11 @@
 package pt.isec.pa.chess.model.data;
 
+import pt.isec.pa.chess.model.data.pieces.*;
+
 public enum PieceType {
     KING, QUEEN, BISHOP, KNIGHT, ROOK, PAWN;
 
-    Piece createPiece(Board board, PiecePosition position, PieceColor color, boolean... firstMove) {
+    public Piece createPiece(Board board, PiecePosition position, PieceColor color, boolean... firstMove) {
         boolean checkMove = true;
         if (firstMove.length > 0) {
             checkMove = firstMove[0];
@@ -18,7 +20,7 @@ public enum PieceType {
         };
     }
 
-    static Piece createPiece(Board board, String representation) {
+    public static Piece createPiece(Board board, String representation) {
         representation = representation.replaceAll("\n", "");
         if (representation.split("").length < 3 || PieceColor.translate(representation) != null || representation.equals("\n")) {
             return null;
@@ -59,7 +61,7 @@ public enum PieceType {
         };
     }
 
-    static PieceType translate(String text) {
+    public static PieceType translate(String text) {
         return switch (text) {
             case "KING" -> KING;
             case "QUEEN" -> QUEEN;

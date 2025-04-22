@@ -3,7 +3,7 @@ package pt.isec.pa.chess.model.data;
 public enum ColumnType {
     a, b, c, d, e, f, g, h;
 
-    int equivalente() {
+    public int equivalente() {
         return switch (this) {
             case a -> 1;
             case b -> 2;
@@ -16,7 +16,7 @@ public enum ColumnType {
         };
     }
 
-    static ColumnType letra(int numero){
+    public static ColumnType letra(int numero){
         return switch (numero) {
             case 1 -> a;
             case 2 -> b;
@@ -30,7 +30,7 @@ public enum ColumnType {
         };
     }
 
-    static ColumnType letra(String letra){
+    public static ColumnType letra(String letra){
         return switch (letra) {
             case "a" -> a;
             case "b" -> b;

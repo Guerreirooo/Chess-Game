@@ -1,9 +1,15 @@
-package pt.isec.pa.chess.model.data;
+package pt.isec.pa.chess.model.data.pieces;
+
+import pt.isec.pa.chess.model.data.Board;
+import pt.isec.pa.chess.model.data.ColumnType;
+import pt.isec.pa.chess.model.data.PieceColor;
+import pt.isec.pa.chess.model.data.PieceType;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
-abstract class Piece implements Serializable {
+public abstract class Piece implements Serializable {
     private PiecePosition position;
     private PieceColor color;
     private Board board;
@@ -11,7 +17,7 @@ abstract class Piece implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public Piece(Board board, PiecePosition position, PieceColor color) {
+    Piece(Board board, PiecePosition position, PieceColor color) {
         if (position.getRow() < 1 || position.getRow() > 8) {
             return;
         }
@@ -26,7 +32,7 @@ abstract class Piece implements Serializable {
 
     public abstract List<String> getPossibleMoves();
 
-    abstract PieceType getPieceType();
+    public abstract PieceType getPieceType();
 
     @Override
     public String toString() {
@@ -43,26 +49,26 @@ abstract class Piece implements Serializable {
         return board.checkColorPosition(row, column);
     }
 
-    PieceColor getColor() {
+    public PieceColor getColor() {
         return color;
     }
 
-    ColumnType getColumn() {
+    public ColumnType getColumn() {
         return position.getColumn();
     }
 
-    int getRow() {
+    public int getRow() {
         return position.getRow();
     }
 
-    void setRow(int row) {
+    public void setRow(int row) {
         if (row < 1 || row > 8) {
             return;
         }
         this.position.setRow(row);
     }
 
-    void setCol(ColumnType col) {
+    public void setCol(ColumnType col) {
         this.position.setColumn(col);
     }
 
