@@ -3,17 +3,17 @@ package pt.isec.pa.chess.ui;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import pt.isec.pa.chess.model.data.ChessGame;
+import pt.isec.pa.chess.model.ChessGameManager;
 
 public class MainJFX extends Application {
-    ChessGame data;
+    ChessGameManager data;
 
-    public MainJFX() { data = new ChessGame(); } // It can also be created in 'init'
+    public MainJFX() { data = new ChessGameManager(); } // It can also be created in 'init'
 
     @Override
     public void start(Stage stage) throws Exception {
-        RootPane root = new RootPane(data);
-        Scene scene = new Scene(root,800,800);
+        RootPane root = new RootPane(data,stage);
+        Scene scene = new Scene(root,1300,1000);
         stage.setScene(scene);
         stage.setTitle("Chess Game");
         stage.show();

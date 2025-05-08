@@ -1,5 +1,6 @@
-package pt.isec.pa.chess.model.data;
+package pt.isec.pa.chess.model;
 
+import pt.isec.pa.chess.model.data.*;
 import pt.isec.pa.chess.model.data.pieces.*;
 
 import java.io.*;
@@ -27,14 +28,20 @@ public class ChessGame implements Serializable {
 
     public void initGame(){
         board.initGame();
-        System.out.println(board);
     }
 
     public void initGame(String blackName, String whiteName){
-        black = new Player(PieceColor.BLACK, blackName);
-        white = new Player(PieceColor.WHITE, whiteName);
+        setBlackName(blackName);
+        setWhiteName(whiteName);
         board.initGame();
-        System.out.println(board);
+    }
+
+    public void setBlackName(String blackName){
+        black = new Player(PieceColor.BLACK, blackName);
+    }
+
+    public void setWhiteName(String whiteName){
+        white = new Player(PieceColor.WHITE, whiteName);
     }
 
     void setCurrentPlayer(PieceColor color){
@@ -45,6 +52,9 @@ public class ChessGame implements Serializable {
         return playerColor;
     }
 
+    public Piece getPiece(int row, ColumnType col) {
+        return board.getPiece(row,col);
+    }
     @Override
     public String toString(){
         return board.toString();
@@ -131,27 +141,28 @@ public class ChessGame implements Serializable {
         }
     }
 
-    public boolean move(int rowPiece, ColumnType colPiece, int row, ColumnType col) {
+    public MoveType move(int rowPiece, ColumnType colPiece, int row, ColumnType col) {
         Piece piece = board.getPiece(rowPiece, colPiece);
 
-        if (row > 8 || row < 1 || piece == null) {
-            return false;
+        if (piece.getColor() != getCurrentPlayer() || row > getBoardSize() || row < 1 || piece == null) {
+            return MoveType.FALSE;
         }
 
         PieceColor color = board.checkColorPosition(row, col);
         String nextMove = col.toString() + row;
 
-        if(piece.getPieceType() == PieceType.PAWN && piece.getColor() == PieceColor.BLACK && row == 8){
+        if(piece.getPieceType() == PieceType.PAWN && piece.getColor() == PieceColor.BLACK && row == getBoardSize()){
             if(board.move(piece, row, col)){
-                getTypePromote(piece);
+                return MoveType.PROMOTE;
+                // getTypePromote(piece);
             }
-            return true;
         }
         else if(piece.getPieceType() == PieceType.PAWN && piece.getColor() == PieceColor.WHITE && row == 1){
             if(board.move(piece, row, col)){
-                getTypePromote(piece);
+                return MoveType.PROMOTE;
+                // getTypePromote(piece);
             }
-            return true;
+            return MoveType.TRUE;
         }
 
         if(piece.getPieceType() == PieceType.KING && color == PieceColor.BLACK){
@@ -159,53 +170,69 @@ public class ChessGame implements Serializable {
                 if (board.roque(piece,board.getPiece(row,col))){
                     piece.setCol(ColumnType.g);
                     board.getPiece(row,col).setCol(ColumnType.f);
-                    return true;
+                    return MoveType.TRUE;
                 }
             }
             else if(row == 1 && col == ColumnType.a){
                 if (board.roque(piece,board.getPiece(row,col))){
                     piece.setCol(ColumnType.c);
                     board.getPiece(row,col).setCol(ColumnType.d);
-                    return true;
+                    return MoveType.TRUE;
                 }
             }
         }
         else if(piece.getPieceType() == PieceType.KING && color == PieceColor.WHITE) {
-            if (row == 8 && col == ColumnType.h) {
+            if (row == getBoardSize() && col == ColumnType.h) {
                 if (board.roque(piece, board.getPiece(row, col))) {
                     piece.setCol(ColumnType.g);
                     board.getPiece(row, col).setCol(ColumnType.f);
-                    return true;
+                    return MoveType.TRUE;
                 }
-            } else if (row == 8 && col == ColumnType.a) {
+            } else if (row == getBoardSize() && col == ColumnType.a) {
                 if (board.roque(piece, board.getPiece(row, col))) {
                     piece.setCol(ColumnType.c);
                     board.getPiece(row, col).setCol(ColumnType.d);
-                    return true;
+                    return MoveType.TRUE;
                 }
             }
         }
-        return board.move(piece, row, col);
+
+        if (board.move(piece, row, col)) {
+            if (getCurrentPlayer() == PieceColor.WHITE) {
+                setCurrentPlayer(PieceColor.BLACK);
+            }
+            else {
+                setCurrentPlayer(PieceColor.WHITE);
+            }
+            return MoveType.TRUE;
+        }
+
+        return MoveType.FALSE;
     }
 
-    private void getTypePromote(Piece p){
-        String Type;
-        PieceType pt = null;
-        Piece retorno = null;
-        Scanner sc = new Scanner(System.in);
-        do {
-            System.out.println("Promocao de peao! Nova peca : [QUEEN,ROOK,BISHOP,KNIGHT]\n");
-            Type = sc.nextLine();
-            if(Type.equalsIgnoreCase("QUEEN") || Type.equalsIgnoreCase("ROOK") || Type.equalsIgnoreCase("BISHOP") || Type.equalsIgnoreCase("KNIGHT")){
-                pt = PieceType.translate(Type);
-            }
-        }
-        while(!board.promotePawn(p, pt));
+    public boolean lackOfMaterial(){
+        return board.lackOfMaterial();
+    }
+
+    public int getBoardSize(){
+        return board.getBoardSize();
+    }
+
+    public void getTypePromote(int row, ColumnType col, PieceType pt){
+        board.promotePawn(getPiece(row, col), pt);
     }
 
     public void gameOver(){
         if(board.checkMate()){
             System.out.println(playerColor + " wins!");
         }
+    }
+
+    public boolean checkStopCheckMate(PieceColor kingColor) {
+        return board.checkStopCheckMate(kingColor);
+    }
+
+    public boolean drownedKing(){
+        return board.drownedKing();
     }
 }

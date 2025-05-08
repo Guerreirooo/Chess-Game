@@ -9,6 +9,7 @@ import java.util.List;
 
 public class Board implements Serializable {
     private List<Piece> Pieces;
+    int boardSize = 8;
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -39,10 +40,10 @@ public class Board implements Serializable {
         addPiece(PieceType.KNIGHT, new PiecePosition(1, ColumnType.b), PieceColor.BLACK);
         addPiece(PieceType.ROOK, new PiecePosition(1, ColumnType.a), PieceColor.BLACK);
 
-        /*for(ColumnType c : ColumnType.values()){
+        for(ColumnType c : ColumnType.values()){
             addPiece(PieceType.PAWN, new PiecePosition(2, c), PieceColor.BLACK);
             addPiece(PieceType.PAWN, new PiecePosition(7, c), PieceColor.WHITE);
-        }*/
+        }
 
         addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.h), PieceColor.WHITE);
         addPiece(PieceType.KNIGHT, new PiecePosition(8, ColumnType.g), PieceColor.WHITE);
@@ -55,17 +56,21 @@ public class Board implements Serializable {
     }
 
     void addPiece(PieceType pt, int row, ColumnType col, PieceColor color) {
-        if (row < 1 || row > 8) {
+        if (row < 1 || row > getBoardSize()) {
             return;
         }
         Pieces.add(pt.createPiece(this, new PiecePosition(row, col), color));
+    }
+
+    public int getBoardSize(){
+        return boardSize;
     }
 
     void addPiece(PieceType pt, PiecePosition pos, PieceColor color) {
         Pieces.add(pt.createPiece(this, pos, color));
     }
 
-    void addPiece(String piece) {
+    public void addPiece(String piece) {
         Piece temp = PieceType.createPiece(this, piece);
         if (temp != null) {
             Pieces.add(temp);
@@ -76,7 +81,7 @@ public class Board implements Serializable {
     public String toString(){
         StringBuilder sb = new StringBuilder();
         Piece p;
-        for(int i = 1; i <= 8; i++){
+        for(int i = 1; i <= getBoardSize(); i++){
             for(ColumnType c : ColumnType.values()){
                 p = getPiece(i, c);
                 if(p != null){
@@ -92,7 +97,7 @@ public class Board implements Serializable {
     }
 
     boolean moveWithoutConfirmation(Piece piece, int row, ColumnType col) {
-        if (row > 8 || row < 1 || piece == null) {
+        if (row > getBoardSize() || row < 1 || piece == null) {
             return false;
         }
 
@@ -117,8 +122,8 @@ public class Board implements Serializable {
         return true;
     }
 
-    boolean move(Piece piece, int row, ColumnType col) {
-        if (row > 8 || row < 1 || piece == null) {
+    public boolean move(Piece piece, int row, ColumnType col) {
+        if (row > getBoardSize() || row < 1 || piece == null) {
             return false;
         }
 
@@ -135,9 +140,9 @@ public class Board implements Serializable {
                 return false;
             }
             else if (moves.equals(nextMove) && checkColorPosition(row, col) != piece.getColor()) {
+                remove(getPiece(row, col));
                 piece.setRow(row);
                 piece.setCol(col);
-                remove(getPiece(row, col));
                 return true;
             }
         }
@@ -145,7 +150,7 @@ public class Board implements Serializable {
         return false;
     }
 
-    Piece getPiece(int row, ColumnType col) {
+    public Piece getPiece(int row, ColumnType col) {
         for(Piece p: Pieces) {
             if(p.getRow() == row && p.getColumn() == col){
                 return p;
@@ -257,7 +262,7 @@ public class Board implements Serializable {
         return false;
     }
 
-    boolean promotePawn(Piece p, PieceType type) {
+    public boolean promotePawn(Piece p, PieceType type) {
         if(type == PieceType.KING || type == PieceType.PAWN || type == null){
             return false;
         }
@@ -268,7 +273,7 @@ public class Board implements Serializable {
         return false;
     }
 
-    boolean roque(Piece rei, Piece torre){
+    public boolean roque(Piece rei, Piece torre){
         King reiTemp = (King) rei;
         Rook torreTemp = (Rook) torre;
 
@@ -293,12 +298,12 @@ public class Board implements Serializable {
     public boolean lackOfMaterial(){
         int contador = 0;
         for(Piece p : Pieces){
-            if(p.getPieceType() == PieceType.QUEEN){
+            if(p.getPieceType() == PieceType.QUEEN || p.getPieceType() == PieceType.ROOK){
                 return false;
             }
             contador++;
         }
-        if(contador == 3){
+        if(contador <= 3){
             return true;
         }
         return false;
@@ -311,8 +316,8 @@ public class Board implements Serializable {
         List<String> possibleMovesTemp = new ArrayList<>();
         for(int i = 0; i < 2; i++) {
             for (Piece p : Pieces) {
-                if (p.getPieceType() == PieceType.KING && p.getColor() == kingColor) {
-                    possibleMovesRei = p.getPossibleMoves();
+                if (p.getColor() == kingColor) {
+                    possibleMovesRei.addAll(p.getPossibleMoves());
                 }
             }
 
@@ -342,7 +347,7 @@ public class Board implements Serializable {
     }
 
     boolean remove(int row, ColumnType col) {
-        if (row < 1 || row > 8) {
+        if (row < 1 || row > getBoardSize()) {
             return false;
         }
 
@@ -359,7 +364,7 @@ public class Board implements Serializable {
         return Pieces.remove(piece);
     }
 
-    List<Piece> getPiecesList() {
+    public List<Piece> getPiecesList() {
         return Pieces;
     }
 }

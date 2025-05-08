@@ -1,22 +1,41 @@
 package pt.isec.pa.chess.ui;
 
-import javafx.geometry.Insets;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import pt.isec.pa.chess.model.data.ChessGame;
-import pt.isec.pa.chess.model.data.ChessGameSerialization;
+import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import pt.isec.pa.chess.model.*;
+import pt.isec.pa.chess.model.data.PieceColor;
 
+import java.io.File;
 import java.util.Optional;
 
 public class RootPane extends BorderPane { //View-Controller
-    ChessGame game;
-    Menu mnGame,mnFile, mnView;
-    MenuItem mnNew, mnLoad,mnSave,mnLoadPartial,mnSavePartial,mnUndo,mnRedo;
+    ChessGameManager game;
+    Stage stage;
+    Pane center,right,left,top,bottom;
+    Menu mnGame,mnMode;
+    Label lblPlayer1,lblPlayer2,lblPlayerTurn;
+    MenuItem mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit;
+    CheckMenuItem mnNormal,mnLearning,mnPossibleMoves,mnUndo,mnRedo;
+    String player1,player2,playerTurn = "WHITE";
+    double xi,yi,xf,yf;
+    boolean selecionado = false;
+    BoardUI boardui;
+    boolean gameOver, gameDraw;
 
-    public RootPane(ChessGame data) {
+    public RootPane(ChessGameManager data, Stage stage) {
         this.game = data;
+        this.stage = stage;
+        gameOver = false;
+        gameDraw = false;
 
         createViews();
         registerHandlers();
@@ -26,22 +45,29 @@ public class RootPane extends BorderPane { //View-Controller
     private MenuBar createMenu() {
         MenuBar mb = new MenuBar();
         mnGame = new Menu("Game");
-        mnNew = new MenuItem("New Game");
-        mnLoad = new MenuItem("Load Game");
-        mnSave = new MenuItem("Save Game");
-        mnGame.getItems().addAll(mnNew,mnLoad,mnSave);
+        mnNew = new MenuItem("New");
+        mnOpen = new MenuItem("Open");
+        mnSave = new MenuItem("Save");
+        mnImport = new MenuItem("Import");
+        mnExport = new MenuItem("Export");
+        mnQuit = new MenuItem("Quit");
+        mnGame.getItems().addAll(mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit);
 
-        mnFile = new Menu("File");
-        mnLoadPartial = new MenuItem("Load Partial Game");
-        mnSavePartial = new MenuItem("Save Partial Game");
-        mnFile.getItems().addAll(mnLoadPartial,mnSavePartial);
+        mnMode = new Menu("Mode");
+        mnNormal= new CheckMenuItem("Normal");
+        mnLearning = new CheckMenuItem("Learning");
+        mnPossibleMoves = new CheckMenuItem("Possible Moves");
+        mnUndo = new CheckMenuItem("Undo");
+        mnRedo = new CheckMenuItem("Redo");
+        mnMode.getItems().addAll(mnNormal,mnLearning,mnPossibleMoves,mnUndo,mnRedo);
+        mnNormal.setSelected(true);
+        mnPossibleMoves.setVisible(false);
+        mnUndo.setVisible(false);
+        mnRedo.setVisible(false);
 
-        mnView = new Menu("View");
-        mnUndo = new MenuItem("Undo");
-        mnRedo = new MenuItem("Redo");
-        mnView.getItems().addAll(mnUndo,mnRedo);
 
-        mb.getMenus().addAll(mnGame,mnFile,mnView);
+
+        mb.getMenus().addAll(mnGame,mnMode);
         return mb;
     }
 
@@ -67,96 +93,245 @@ public class RootPane extends BorderPane { //View-Controller
         return null;
     }
 
+    private void labelsInfo(){
+        right.setPrefWidth(300);
+
+        if(player1 == null || player2 == null) {
+            lblPlayer1.setText("Player 1 : ");
+            lblPlayer2.setText("Player 2 : ");
+            lblPlayerTurn.setText("Player Turn : ");
+        }
+        else {
+            lblPlayer1.setText("Player 1 : " + player1);
+            lblPlayer2.setText("Player 2 : " + player2);
+            lblPlayerTurn.setText("Player Turn : " + playerTurn);
+        }
+        lblPlayer1.setFont(new Font(26));
+        lblPlayer1.setPrefWidth(right.getPrefWidth());
+        lblPlayer1.setLayoutY(275);
+        lblPlayer1.setAlignment(Pos.CENTER);
+
+        lblPlayer2.setFont(new Font(26));
+        lblPlayer2.setPrefWidth(right.getPrefWidth());
+        lblPlayer2.setLayoutY(350);
+        lblPlayer2.setAlignment(Pos.CENTER);
+
+        lblPlayerTurn.setFont(new Font(26));
+        lblPlayerTurn.setPrefWidth(right.getPrefWidth());
+        lblPlayerTurn.setLayoutY(425);
+        lblPlayerTurn.setAlignment(Pos.CENTER);
+    }
+
     private void createViews() {
         /* create and configure views */
-        setTop(createMenu());
+        center = new Pane();
+        center.setStyle("-fx-background-color: #D3D3D3");
+        boardui = new BoardUI(1000, 1000, game);
+
+        top = new Pane();
+        top.setPrefHeight(50);
+        top.setStyle("-fx-background-color: #D3D3D3");
+        left = new Pane();
+        left.setPrefWidth(100);
+        left.setStyle("-fx-background-color: #D3D3D3");
+        bottom = new Pane();
+        bottom.setPrefHeight(50);
+        bottom.setStyle("-fx-background-color: #D3D3D3");
+
+        right = new Pane();
+        right.setStyle("-fx-background-color: #D3D3D3");
+        lblPlayer1 = new Label();
+        lblPlayer2 = new Label();
+        lblPlayerTurn = new Label();
+        labelsInfo();
+
+
+        VBox topContainer = new VBox();
+        topContainer.getChildren().addAll(createMenu(), top);
+
+        setTop(topContainer);
+        setRight(right);
+        setLeft(left);
+        setCenter(center);
+        setBottom(bottom);
+        center.getChildren().add(boardui.getCanvas());
+        right.getChildren().addAll(lblPlayer1,lblPlayer2,lblPlayerTurn);
     }
 
     private void registerHandlers() {
         /* handlers/listeners */
         mnNew.setOnAction(e -> {
-            String player1,player2;
             player1 = askPlayerName("Jogador 1 (Pretas)");
             player2 = askPlayerName("Jogador 2 (Brancas)");
 
-            //game.initGame();
-            game.initGame(player1, player2);
+            if(player1 != null || player2 != null) {
+                gameOver = false;
+                gameDraw = false;
+                game.initGame(player1, player2);
+                boardui.createCanvas();
+                update();
+            }
         });
 
-        mnLoad.setOnAction(e -> {
-            ChessGame temp = ChessGameSerialization.load("SerializationGame.txt");
-            if(temp == null){
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Erro ao carregar jogo (serialização)");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("Não foi possível carregar o jogo");
-                errorAlert.showAndWait();
-            }
-            else{
-                game.alterarValores(temp);
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("Jogo carregado com sucesso (serializacao)");
-                successAlert.setHeaderText(null);
-                successAlert.setContentText("Jogo carregado com sucesso");
-                successAlert.showAndWait();
+        mnOpen.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Carregar Jogo");
+
+            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
+            fileChooser.getExtensionFilters().add(extFilter);
+
+            File file = fileChooser.showOpenDialog(stage);
+
+            if (file != null) {
+                mnNew.fire();
+
+                if (!game.load(file.getAbsolutePath())) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Erro ao carregar jogo (serialização)");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("Não foi possível carregar o jogo");
+                    errorAlert.showAndWait();
+                } else {
+                    gameOver = false;
+                    gameDraw = false;
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Jogo carregado com sucesso (serializacao)");
+                    successAlert.setHeaderText(null);
+                    successAlert.setContentText("Jogo carregado com sucesso");
+                    successAlert.showAndWait();
+                }
             }
         });
 
         mnSave.setOnAction(e -> {
-            System.out.println(game);
-            if(!ChessGameSerialization.save("SerializationGame.txt", game)){
-                System.out.println(game);
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Erro ao salvar o jogo (serializacao)");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("Não foi possível salvar o jogo");
-                errorAlert.showAndWait();
-            }
-            else{
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("Jogo carregado com sucesso (serializacao)");
-                successAlert.setHeaderText(null);
-                successAlert.setContentText("Jogo carregado com sucesso");
-                successAlert.showAndWait();
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Guardar Jogo (serialização)");
+
+            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
+            fileChooser.getExtensionFilters().add(extFilter);
+
+            File file = fileChooser.showSaveDialog(stage);
+            if (file != null) {
+                if (!game.save(file.getAbsolutePath())) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Erro ao salvar o jogo (serializacao)");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("Não foi possível salvar o jogo");
+                    errorAlert.showAndWait();
+                } else {
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Jogo salvo com sucesso");
+                    successAlert.setHeaderText(null);
+                    successAlert.setContentText("Jogo salvo com sucesso");
+                    successAlert.showAndWait();
+                }
             }
         });
 
-        mnLoadPartial.setOnAction(e -> {
-            if(!game.loadPartialGame("PartialGame.txt")){
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Erro ao carregar jogo");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("Não foi possível carregar o jogo parcial");
-                errorAlert.showAndWait();
+        mnImport.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Carregar Jogo");
+
+            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
+            fileChooser.getExtensionFilters().add(extFilter);
+
+            File file = fileChooser.showOpenDialog(stage);
+
+            if (file != null) {
+                mnNew.fire();
+
+                if (!game.importGame(file.getAbsolutePath())) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Erro ao carregar jogo");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("Não foi possível carregar o jogo parcial");
+                    errorAlert.showAndWait();
+                } else {
+                    gameOver = false;
+                    gameDraw = false;
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Jogo carregado com sucesso");
+                    successAlert.setHeaderText(null);
+                    successAlert.setContentText("Jogo parcial carregado com sucesso!");
+                    successAlert.showAndWait();
+                }
             }
-            else{
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("Jogo carregado com sucesso");
-                successAlert.setHeaderText(null);
-                successAlert.setContentText("Jogo parcial carregado com sucesso!");
-                successAlert.showAndWait();
+            boardui.createCanvas();
+            update();
+        });
+
+        mnExport.setOnAction(e -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Abrir Jogo");
+
+            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
+            fileChooser.getExtensionFilters().add(extFilter);
+
+            File file = fileChooser.showOpenDialog(stage);
+
+            if (file != null) {
+                if (!game.exportGame(file.getAbsolutePath())) {
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Erro ao salvar jogo");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("Não foi possível salvar o jogo parcial");
+                    errorAlert.showAndWait();
+                } else {
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Jogo salvo com sucesso");
+                    successAlert.setHeaderText(null);
+                    successAlert.setContentText("Jogo parcial salvo com sucesso!");
+                    successAlert.showAndWait();
+                }
             }
         });
 
-        mnSavePartial.setOnAction(e -> {
-            if(!game.savePartialGame("PartialGame.txt")){
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Erro ao salvar jogo");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("Não foi possível salvar o jogo parcial");
-                errorAlert.showAndWait();
-            }
-            else{
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("Jogo salvo com sucesso");
-                successAlert.setHeaderText(null);
-                successAlert.setContentText("Jogo parcial salvo com sucesso!");
-                successAlert.showAndWait();
-            }
+        mnLearning.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                mnPossibleMoves.setVisible(newVal);
+                mnUndo.setVisible(newVal);
+                mnRedo.setVisible(newVal);
+                mnNormal.setSelected(oldVal);
+        });
+
+        mnNormal.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                mnLearning.setSelected(oldVal);
+        });
+
+        mnQuit.setOnAction(e -> {
+            Platform.exit();
+        });
+
+        center.widthProperty().addListener((_,_,_) -> {
+            boardui.setWidth(center.getWidth());
+            boardui.setHeight(center.getHeight());
+            update();
+        });
+
+        center.heightProperty().addListener((_,_,_) -> {
+            boardui.setWidth(center.getWidth());
+            boardui.setHeight(center.getHeight());
+            update();
+        });
+
+        boardui.setOnMousePressed(mouseEvent -> {
+            boardui.onPressed(mouseEvent.getSceneX(), mouseEvent.getSceneY(), gameOver, gameDraw);
+            update();
         });
     }
 
     private void update() {
         /* update views */
+
+        playerTurn = game.getCurrentPlayer().toString();
+        if (!game.checkStopCheckMate(game.getCurrentPlayer() == PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE)) {
+            gameOver = true;
+        }
+        if (game.drownedKing()) {
+            gameDraw = true;
+        }
+        if (game.lackOfMaterial()) {
+            gameDraw = true;
+        }
+        labelsInfo();
     }
 }

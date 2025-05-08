@@ -10,7 +10,7 @@ public class Player implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    Player(PieceColor playerColor, String name) {
+    public Player(PieceColor playerColor, String name) {
         this.playerColor = playerColor;
         this.name = name;
     }

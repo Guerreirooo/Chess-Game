@@ -1,6 +1,7 @@
 package pt.isec.pa.chess.model.data.pieces;
 
 import pt.isec.pa.chess.model.data.Board;
+import pt.isec.pa.chess.model.data.ColumnType;
 import pt.isec.pa.chess.model.data.PieceColor;
 import pt.isec.pa.chess.model.data.PieceType;
 
@@ -87,5 +88,17 @@ public class Pawn extends Piece {
         checkMove(possibleMoves, auxRow, auxCol, true, true);
 
         return possibleMoves;
+    }
+
+    @Override
+    public void setRow(int row) {
+        super.setRow(row);
+        move = true;
+    }
+
+    @Override
+    public void setCol(ColumnType col) {
+        super.setCol(col);
+        move = true;
     }
 }
