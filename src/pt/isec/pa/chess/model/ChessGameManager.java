@@ -4,7 +4,10 @@ import pt.isec.pa.chess.model.data.*;
 import pt.isec.pa.chess.model.data.pieces.MoveType;
 import pt.isec.pa.chess.model.data.pieces.Piece;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.*;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class ChessGameManager {
@@ -12,39 +15,62 @@ public class ChessGameManager {
     private int tabuleiroX = 170;
     private int tabuleiroY = 144;
     private int SquareSize = 70;
+    private static int numMovements = 0;
+    PropertyChangeSupport pcs;
+    public static final String GAME_VALUE = "game";
+    public static final String PLAYER_VALUE = "player";
 
     public ChessGameManager() {
         game = new ChessGame();
+        pcs = new PropertyChangeSupport(this);
     }
 
     public ChessGameManager(ChessGame game) {
         this.game = game;
+        pcs = new PropertyChangeSupport(this);
+    }
+
+    public void addPropertyChangeListener(String property, PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(property,listener);
     }
 
     public void alterarValores(ChessGame temp) {
         game.alterarValores(temp);
+        pcs.firePropertyChange(GAME_VALUE, null, null);
     }
+
+    public int getNumMovements(){return numMovements;}
+
+    public void setNumMovements(int newNum){numMovements = newNum;}
+
+    public void incNumMovements(){numMovements++;}
 
     public void initGame(){
         game.initGame();
+        pcs.firePropertyChange(GAME_VALUE, null, null);
+        ModelLog.getInstance().log("Jogo iniciado");
     }
 
     public void initGame(String blackName, String whiteName){
         game.setBlackName(blackName);
         game.setWhiteName(whiteName);
-        game.initGame();
+        initGame();
+        pcs.firePropertyChange(GAME_VALUE, null, null);
     }
 
     public void setBlackName(String blackName){
         game.setBlackName(blackName);
+        pcs.firePropertyChange(PLAYER_VALUE, null, null);
     }
 
     public void setWhiteName(String whiteName){
         game.setWhiteName(whiteName);
+        pcs.firePropertyChange(PLAYER_VALUE, null, null);
     }
 
-    void setCurrentPlayer(PieceColor color){
+    public void setCurrentPlayer(PieceColor color){
         game.setCurrentPlayer(color);
+        pcs.firePropertyChange(PLAYER_VALUE, null, null);
     }
 
     public PieceColor getCurrentPlayer(){
@@ -114,24 +140,42 @@ public class ChessGameManager {
     }
 
     public boolean exportGame(String fileName) {
-        return game.savePartialGame(fileName);
+        if (!game.savePartialGame(fileName)) {
+            ModelLog.getInstance().log("Erro ao exportar o jogo em " + fileName);
+            return false;
+        }
+        return true;
     }
 
     public boolean importGame(String fileName) {
-        return game.loadPartialGame(fileName);
+        boolean result = game.loadPartialGame(fileName);
+        if(result) {
+            pcs.firePropertyChange(PLAYER_VALUE, null, null);
+            pcs.firePropertyChange(GAME_VALUE, null, null);
+        }
+        else {
+            ModelLog.getInstance().log("Erro ao carregar o jogo em " + fileName);
+        }
+        return result;
     }
 
     public boolean load(String fileName) {
         ChessGame temp = ChessGameSerialization.load(fileName);
         if (temp == null) {
+            ModelLog.getInstance().log("Erro ao carregar o jogo em " + fileName);
             return false;
         }
         alterarValores(temp);
+        pcs.firePropertyChange(PLAYER_VALUE, null, null);
         return true;
     }
 
     public boolean save(String fileName) {
-        return ChessGameSerialization.save(fileName, game);
+        if (!ChessGameSerialization.save(fileName, game)) {
+            ModelLog.getInstance().log("Erro ao guardar o jogo em " + fileName);
+            return false;
+        }
+        return true;
     }
 
     int getRow(double col) {
@@ -159,11 +203,43 @@ public class ChessGameManager {
     }
 
     public MoveType move(double rowPiece, double colPiece, double row, double col) {
-        return game.move(getRow(colPiece), getColumn(rowPiece), getRow(col), getColumn(row));
+        MoveType result = game.move(getRow(colPiece), getColumn(rowPiece), getRow(col), getColumn(row));
+        if(result != MoveType.FALSE){
+            ModelLog.getInstance().log("Movimento: de " + getColumn(rowPiece) + mudarNumeros(getRow(colPiece)) + " para " + getColumn(row) + mudarNumeros(getRow(col)));
+            incNumMovements();
+            pcs.firePropertyChange(PLAYER_VALUE, null, null);
+        }
+        pcs.firePropertyChange(GAME_VALUE, null, null);
+
+
+        return result;
+    }
+
+    private int mudarNumeros(int x) {
+        switch (x) {
+            case 1:
+                return 8;
+            case 2:
+                return 7;
+            case 3:
+                return 6;
+            case 4:
+                return 5;
+            case 5:
+                return 4;
+            case 6:
+                return 3;
+            case 7:
+                return 2;
+            case 8:
+                return 1;
+        }
+        return x;
     }
 
     public void getTypePromote(double rowPiece, double colPiece, String pt){
         game.getTypePromote(getRow(colPiece), getColumn(rowPiece), PieceType.translate(pt));
+        pcs.firePropertyChange(GAME_VALUE, null, null);
     }
 
     public boolean checkStopCheckMate(PieceColor kingColor) {
@@ -176,6 +252,14 @@ public class ChessGameManager {
 
     public boolean lackOfMaterial(){
         return game.lackOfMaterial();
+    }
+
+    public boolean checkMate(){
+        if (game.checkMate()) {
+            ModelLog.getInstance().log("CheckMate de " + getCurrentPlayer());
+            return true;
+        }
+        return false;
     }
 
     /*
@@ -197,11 +281,19 @@ public class ChessGameManager {
     }*/
 
     /*
-    *   NAO SEI COMO FAZER
-    *
-    public void gameOver(){
-        if(board.checkMate()){
-            System.out.println(playerColor + " wins!");
+    *   NAO SEI COMO FAZER */
+
+    public boolean gameOver(){
+        if(game.gameOver()){
+            return true;
         }
-    }*/
+        return false;
+    }
+
+    public boolean check(String playerTurn){
+        if(game.check(playerTurn)){
+            return true;
+        }
+        return false;
+    }
 }

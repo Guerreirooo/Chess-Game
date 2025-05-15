@@ -88,12 +88,10 @@ public class BoardUI extends Canvas {
         yi = mouseY;
         System.out.println("xi: " + xi + " yi: " + yi);
         if(selecionado){
-            // System.out.println(game.move(xf,yf,xi,yi));
             System.out.println(false);
             selecionado = false;
             if (game.move(xf,yf,xi,yi) == MoveType.PROMOTE) {
             }
-            createCanvas();
         }
         else{
             seleciona(xi,yi);

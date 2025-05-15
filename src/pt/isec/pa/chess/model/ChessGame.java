@@ -222,10 +222,12 @@ public class ChessGame implements Serializable {
         board.promotePawn(getPiece(row, col), pt);
     }
 
-    public void gameOver(){
+    public boolean gameOver(){
         if(board.checkMate()){
             System.out.println(playerColor + " wins!");
+            return true;
         }
+        return false;
     }
 
     public boolean checkStopCheckMate(PieceColor kingColor) {
@@ -234,5 +236,18 @@ public class ChessGame implements Serializable {
 
     public boolean drownedKing(){
         return board.drownedKing();
+    }
+
+    public boolean checkMate(){
+        return board.checkMate();
+    }
+
+    public boolean check(String playerTurn){
+        PieceColor temp;
+        temp = PieceColor.cor(playerTurn);
+        if(board.check(temp ,board)){
+            return true;
+        }
+        return false;
     }
 }

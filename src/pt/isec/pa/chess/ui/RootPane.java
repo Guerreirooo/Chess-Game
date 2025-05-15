@@ -25,9 +25,7 @@ public class RootPane extends BorderPane { //View-Controller
     Label lblPlayer1,lblPlayer2,lblPlayerTurn;
     MenuItem mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit;
     CheckMenuItem mnNormal,mnLearning,mnPossibleMoves,mnUndo,mnRedo;
-    String player1,player2,playerTurn = "WHITE";
-    double xi,yi,xf,yf;
-    boolean selecionado = false;
+    static String player1,player2,playerTurn = "WHITE";
     BoardUI boardui;
     boolean gameOver, gameDraw;
 
@@ -96,6 +94,8 @@ public class RootPane extends BorderPane { //View-Controller
     private void labelsInfo(){
         right.setPrefWidth(300);
 
+        playerTurn = game.getCurrentPlayer().toString();
+
         if(player1 == null || player2 == null) {
             lblPlayer1.setText("Player 1 : ");
             lblPlayer2.setText("Player 2 : ");
@@ -126,7 +126,7 @@ public class RootPane extends BorderPane { //View-Controller
         /* create and configure views */
         center = new Pane();
         center.setStyle("-fx-background-color: #D3D3D3");
-        boardui = new BoardUI(1000, 1000, game);
+        boardui = new BoardUI(800, 800, game);
 
         top = new Pane();
         top.setPrefHeight(50);
@@ -168,8 +168,8 @@ public class RootPane extends BorderPane { //View-Controller
                 gameOver = false;
                 gameDraw = false;
                 game.initGame(player1, player2);
-                boardui.createCanvas();
-                update();
+                game.setCurrentPlayer(PieceColor.WHITE);
+                game.setNumMovements(0);
             }
         });
 
@@ -256,8 +256,6 @@ public class RootPane extends BorderPane { //View-Controller
                     successAlert.showAndWait();
                 }
             }
-            boardui.createCanvas();
-            update();
         });
 
         mnExport.setOnAction(e -> {
@@ -304,34 +302,45 @@ public class RootPane extends BorderPane { //View-Controller
         center.widthProperty().addListener((_,_,_) -> {
             boardui.setWidth(center.getWidth());
             boardui.setHeight(center.getHeight());
-            update();
+            boardui.createCanvas();
         });
 
         center.heightProperty().addListener((_,_,_) -> {
             boardui.setWidth(center.getWidth());
             boardui.setHeight(center.getHeight());
-            update();
+            boardui.createCanvas();
         });
 
         boardui.setOnMousePressed(mouseEvent -> {
             boardui.onPressed(mouseEvent.getSceneX(), mouseEvent.getSceneY(), gameOver, gameDraw);
-            update();
+        });
+
+        game.addPropertyChangeListener(
+            game.GAME_VALUE, evt -> {
+                    update();
+        });
+
+        game.addPropertyChangeListener(
+                game.PLAYER_VALUE, evt -> {
+                    labelsInfo();
         });
     }
 
     private void update() {
         /* update views */
 
-        playerTurn = game.getCurrentPlayer().toString();
-        if (!game.checkStopCheckMate(game.getCurrentPlayer() == PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE)) {
+        boardui.createCanvas();
+        if (game.check(playerTurn)) {
             gameOver = true;
+            if (game.checkMate()) {
+                gameOver = true;
+            }
         }
-        if (game.drownedKing()) {
+        if (game.drownedKing() && game.getNumMovements() > 10) {
             gameDraw = true;
         }
-        if (game.lackOfMaterial()) {
+        if (game.lackOfMaterial() && game.getNumMovements() > 10) {
             gameDraw = true;
         }
-        labelsInfo();
     }
 }
