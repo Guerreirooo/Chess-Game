@@ -55,7 +55,7 @@ public class Board implements Serializable {
         addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.a), PieceColor.WHITE);
     }
 
-    void addPiece(PieceType pt, int row, ColumnType col, PieceColor color) {
+    public void addPiece(PieceType pt, int row, ColumnType col, PieceColor color) {
         if (row < 1 || row > getBoardSize()) {
             return;
         }
@@ -96,13 +96,24 @@ public class Board implements Serializable {
         return sb.toString();
     }
 
-    boolean moveWithoutConfirmation(Piece piece, int row, ColumnType col) {
+    public boolean moveWithoutConfirmation(Piece piece, int row, ColumnType col) {
         if (row > getBoardSize() || row < 1 || piece == null) {
             return false;
         }
 
         PieceColor color = checkColorPosition(row, col);
         String nextMove = col.toString() + row;
+
+        if (piece.getPieceType() == PieceType.PAWN && ((row == 2 && piece.getColor() == PieceColor.BLACK) || (row == 7 && piece.getColor() == PieceColor.WHITE))) {
+            if (checkColorPosition(row, col) != piece.getColor()) {
+                remove(getPiece(row, col));
+            }
+            PiecePosition positionTemp = new PiecePosition(row, col);
+            PieceColor colorTemp = piece.getColor();
+            remove(piece);
+            addPiece(PieceType.PAWN, positionTemp, colorTemp);
+            return true;
+        }
 
         if (color == null) {
             piece.setRow(row);
@@ -113,9 +124,9 @@ public class Board implements Serializable {
             return false;
         }
         else if (checkColorPosition(row, col) != piece.getColor()) {
+            remove(getPiece(row, col));
             piece.setRow(row);
             piece.setCol(col);
-            remove(getPiece(row, col));
             return true;
         }
 

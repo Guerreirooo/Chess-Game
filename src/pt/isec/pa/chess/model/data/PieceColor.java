@@ -10,12 +10,4 @@ public enum PieceColor {
             default -> null;
         };
     }
-
-    public static PieceColor cor(String color){
-        return switch (color) {
-            case "WHITE" -> WHITE;
-            case "BLACK" -> BLACK;
-            default -> null;
-        };
-    }
 }

@@ -44,7 +44,7 @@ public class ChessGame implements Serializable {
         white = new Player(PieceColor.WHITE, whiteName);
     }
 
-    void setCurrentPlayer(PieceColor color){
+    public void setCurrentPlayer(PieceColor color){
         playerColor = color;
     }
 
@@ -144,7 +144,7 @@ public class ChessGame implements Serializable {
     public MoveType move(int rowPiece, ColumnType colPiece, int row, ColumnType col) {
         Piece piece = board.getPiece(rowPiece, colPiece);
 
-        if (piece.getColor() != getCurrentPlayer() || row > getBoardSize() || row < 1 || piece == null) {
+        if (piece == null || piece.getColor() != getCurrentPlayer() || row > getBoardSize() || row < 1) {
             return MoveType.FALSE;
         }
 
@@ -210,6 +210,15 @@ public class ChessGame implements Serializable {
         return MoveType.FALSE;
     }
 
+    public void addPiece(PieceType pt, int row, ColumnType col, PieceColor color) {
+        board.addPiece(pt, row, col, color);
+    }
+
+    public boolean moveWithoutConfirmation(int rowP, ColumnType colP, int row, ColumnType col) {
+        Piece p = board.getPiece(rowP, colP);
+        return board.moveWithoutConfirmation(p, row, col);
+    }
+
     public boolean lackOfMaterial(){
         return board.lackOfMaterial();
     }
@@ -244,7 +253,7 @@ public class ChessGame implements Serializable {
 
     public boolean check(String playerTurn){
         PieceColor temp;
-        temp = PieceColor.cor(playerTurn);
+        temp = PieceColor.translate(playerTurn);
         if(board.check(temp ,board)){
             return true;
         }

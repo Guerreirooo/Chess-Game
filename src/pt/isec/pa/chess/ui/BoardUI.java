@@ -6,19 +6,29 @@ import javafx.scene.control.Alert;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import pt.isec.pa.chess.model.ChessGameManager;
+import pt.isec.pa.chess.model.data.ColumnType;
 import pt.isec.pa.chess.model.data.pieces.MoveType;
+import pt.isec.pa.chess.model.data.pieces.Piece;
 import pt.isec.pa.chess.ui.res.images.ImageManager;
+
+import java.util.List;
 
 public class BoardUI extends Canvas {
     String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
     boolean selecionado = false;
+    boolean possibleMoves = false;
     ChessGameManager game;
     double xi, yi, xf, yf;
+    int SquareSize = 70;
 
     BoardUI(int x, int y, ChessGameManager game) {
         setWidth(x);
         setHeight(y);
         this.game = game;
+    }
+
+    public void setPossibleMoves(boolean newValue){
+        this.possibleMoves = newValue;
     }
 
     void createCanvas() {
@@ -68,7 +78,7 @@ public class BoardUI extends Canvas {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Fim do Jogo");
             alert.setHeaderText(null);
-            alert.setContentText(game.getCurrentPlayer() + " venceu por xeque-mate!");
+            alert.setContentText(game.getCurrentPlayer() + " perdeu por xeque-mate!");
             alert.showAndWait();
             return;
         }
@@ -86,40 +96,74 @@ public class BoardUI extends Canvas {
         yf = yi;
         xi = mouseX;
         yi = mouseY;
-        System.out.println("xi: " + xi + " yi: " + yi);
+
         if(selecionado){
-            System.out.println(false);
             selecionado = false;
             if (game.move(xf,yf,xi,yi) == MoveType.PROMOTE) {
             }
         }
         else{
-            seleciona(xi,yi);
+            int row = convertCordinatesY(xi);
+            int col = convertCordinatesX(yi);
+            if(seleciona(col,row) && possibleMoves == true) {
+                selecionaPossibleMoves(col, row);
+            }
+            selecionado = true;
         }
     }
 
-    private void seleciona(double xi, double yi) {
-        int tabuleiroX = 170;
-        int tabuleiroY = 144;
-        int SquareSize = 70;
-
-        double localX = xi - tabuleiroX;
-        double localY = yi - tabuleiroY;
-
-        int col = (int)(localX / SquareSize) + 1;
-        int row = (int)(localY / SquareSize) + 1;
-
-        System.out.println("Peca: " + game.getPiece(row, col));
-
-        if (!game.getPiece(row, col)) {
-            return;
+    private boolean seleciona(int xi, int yi) {
+        if(game.havePiece(xi, yi)){
+            Piece pieceAux = game.getPiece(xi, yi);
+            if (pieceAux == null){
+                return false;
+            }
+            if(game.getCurrentPlayer().equals(pieceAux.getColor())){
+                GraphicsContext gc = getGraphicsContext2D();
+                gc.setFill(Color.rgb(255, 0, 0, 0.3));
+                gc.fillRect(yi * SquareSize, xi * SquareSize, SquareSize, SquareSize);
+                return true;
+            }
+            return false;
         }
+        return false;
+    }
 
-        GraphicsContext gc = getGraphicsContext2D();
-        gc.setFill(Color.rgb(255, 0, 0, 0.3));
-        System.out.println("col: " + tabuleiroX + col * SquareSize + " row: " + tabuleiroY + row * SquareSize);
-        gc.fillRect(col * SquareSize, row * SquareSize, SquareSize, SquareSize);
+    private int convertCordinatesY(double xi) {
+        int tabuleiroX = 170;
 
-        selecionado = true;
+        double localY = xi - tabuleiroX;
+
+        int col = (int)(localY / SquareSize) + 1;
+        return col;
+    }
+
+    private int convertCordinatesX(double yi) {
+        int tabuleiroY = 144;
+
+        double localX = yi - tabuleiroY;
+
+        int row = (int)(localX / SquareSize) + 1;
+        return row;
+    }
+
+    private void selecionaPossibleMoves(int row, int col) {
+        Piece temp = game.getPiece(row,col);
+        List<String> tempMoves = temp.getPossibleMoves();
+        ColumnType colunaTemp;
+        String coluna;
+        int colunaNum;
+        int linha;
+
+        for(String t : tempMoves){
+            coluna = t.substring(0,1);
+            colunaTemp = ColumnType.letra(coluna);
+            colunaNum = colunaTemp.equivalente();
+            linha = Integer.parseInt(t.substring(1));
+
+            GraphicsContext gc = getGraphicsContext2D();
+            gc.setFill(Color.rgb(255, 0, 0, 0.3));
+            gc.fillRect(colunaNum * SquareSize, linha * SquareSize, SquareSize, SquareSize);
+        }
     }
 }

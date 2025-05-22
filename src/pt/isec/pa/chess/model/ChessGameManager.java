@@ -1,14 +1,16 @@
 package pt.isec.pa.chess.model;
 
+import pt.isec.pa.chess.model.command.CommandManager;
+import pt.isec.pa.chess.model.command.MoveCommand;
 import pt.isec.pa.chess.model.data.*;
 import pt.isec.pa.chess.model.data.pieces.MoveType;
 import pt.isec.pa.chess.model.data.pieces.Piece;
+import pt.isec.pa.chess.ui.res.SoundManager;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.*;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChessGameManager {
     private ChessGame game;
@@ -19,10 +21,13 @@ public class ChessGameManager {
     PropertyChangeSupport pcs;
     public static final String GAME_VALUE = "game";
     public static final String PLAYER_VALUE = "player";
+    boolean sounds = false;
+    CommandManager cm;
 
     public ChessGameManager() {
         game = new ChessGame();
         pcs = new PropertyChangeSupport(this);
+        newCommandManager();
     }
 
     public ChessGameManager(ChessGame game) {
@@ -32,6 +37,17 @@ public class ChessGameManager {
 
     public void addPropertyChangeListener(String property, PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(property,listener);
+    }
+
+    public String getSound(){
+        if(sounds){
+            return "ON";
+        }
+        return "OFF";
+    }
+
+    public void setSounds(boolean sounds) {
+        this.sounds = sounds;
     }
 
     public void alterarValores(ChessGame temp) {
@@ -48,6 +64,7 @@ public class ChessGameManager {
     public void initGame(){
         game.initGame();
         pcs.firePropertyChange(GAME_VALUE, null, null);
+        newCommandManager();
         ModelLog.getInstance().log("Jogo iniciado");
     }
 
@@ -75,6 +92,13 @@ public class ChessGameManager {
 
     public PieceColor getCurrentPlayer(){
         return game.getCurrentPlayer();
+    }
+
+    public PieceColor getWaitingPlayer(){
+        if(game.getCurrentPlayer() == PieceColor.WHITE){
+            return PieceColor.BLACK;
+        }
+        return PieceColor.WHITE;
     }
 
     public String getPieceImage(int row, int col) {
@@ -195,24 +219,78 @@ public class ChessGameManager {
         return colType;
     }
 
-    public boolean getPiece(int row, int col) {
+    public boolean havePiece(int row, int col) {
         if (game.getPiece(row, ColumnType.letra(col)) != null) {
             return true;
         }
         return false;
     }
 
-    public MoveType move(double rowPiece, double colPiece, double row, double col) {
-        MoveType result = game.move(getRow(colPiece), getColumn(rowPiece), getRow(col), getColumn(row));
-        if(result != MoveType.FALSE){
-            ModelLog.getInstance().log("Movimento: de " + getColumn(rowPiece) + mudarNumeros(getRow(colPiece)) + " para " + getColumn(row) + mudarNumeros(getRow(col)));
-            incNumMovements();
-            pcs.firePropertyChange(PLAYER_VALUE, null, null);
+    public Piece getPiece(int row, int col) {
+        Piece temp;
+        temp = game.getPiece(row, ColumnType.letra(col));
+        if (temp == null) {
+            return null;
         }
-        pcs.firePropertyChange(GAME_VALUE, null, null);
+        return temp;
+    }
 
+//    public MoveType move(double rowPiece, double colPiece, double row, double col) {
+//        int rowTemp = getRow(colPiece);
+//        ColumnType colTemp = getColumn(rowPiece);
+//        Piece temp = getPiece(rowTemp,colTemp.equivalente());
+//        boolean capture = havePiece(getRow(col),getColumn(row).equivalente());
+//
+//        MoveType result = game.move(getRow(colPiece), getColumn(rowPiece), getRow(col), getColumn(row));
+//        if(result != MoveType.FALSE){
+//            ModelLog.getInstance().log("Movimento: de " + getColumn(rowPiece) + mudarNumeros(getRow(colPiece)) + " para " + getColumn(row) + mudarNumeros(getRow(col)));
+//            incNumMovements();
+//            if(sounds) {
+//                playSounds(temp, colTemp, mudarNumeros(rowTemp), capture);
+//            }
+//            pcs.firePropertyChange(PLAYER_VALUE, null, null);
+//        }
+//        pcs.firePropertyChange(GAME_VALUE, null, null);
+//
+//        return result;
+//    }
 
-        return result;
+    public void findSounds(List<String> fileNames) {
+        List<String> filesTemp = new ArrayList<>();
+        List<String> lista = new ArrayList<>();
+        lista.add(".mp3");
+        lista.add(".wav");
+
+        for(String filename : fileNames) {
+            for (String s : lista) {
+                if (SoundManager.getSound(filename + s)) {
+                    filesTemp.add(filename + s);
+                    break;
+                }
+            }
+        }
+
+        SoundManager.playSequence(filesTemp);
+    }
+
+    public void playSounds(Piece temp,ColumnType colOrigin,int rowOrigin,boolean capture) {
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add(temp.getColor().toString().toLowerCase());
+        fileNames.add(temp.getPieceType().toString().toLowerCase());
+        fileNames.add(colOrigin.toString().toLowerCase());
+        fileNames.add(rowOrigin + "");
+        fileNames.add(temp.getColumn().toString().toLowerCase());
+        fileNames.add(mudarNumeros(temp.getRow())+"");
+
+        if(capture){
+            fileNames.add("capture");
+        }
+
+        if(check(getCurrentPlayer().toString())){
+            fileNames.add("check");
+        }
+
+        findSounds(fileNames);
     }
 
     private int mudarNumeros(int x) {
@@ -292,6 +370,47 @@ public class ChessGameManager {
 
     public boolean check(String playerTurn){
         if(game.check(playerTurn)){
+            return true;
+        }
+        return false;
+    }
+
+    public void newCommandManager() {
+        cm = new CommandManager();
+    }
+    public MoveType move(double rowPiece, double colPiece, double row, double col) {
+        MoveType result;
+        int rowTemp = getRow(colPiece);
+        ColumnType colTemp = getColumn(rowPiece);
+        Piece temp = getPiece(rowTemp,colTemp.equivalente());
+        boolean capture = havePiece(getRow(col),getColumn(row).equivalente());
+
+        result = cm.invokeCommand(new MoveCommand(game, getRow(colPiece), getColumn(rowPiece), getRow(col), getColumn(row)));
+        if(result != MoveType.FALSE){
+            ModelLog.getInstance().log("Movimento: de " + getColumn(rowPiece) + mudarNumeros(getRow(colPiece)) + " para " + getColumn(row) + mudarNumeros(getRow(col)));
+            incNumMovements();
+            if(sounds) {
+                playSounds(temp, colTemp, mudarNumeros(rowTemp), capture);
+            }
+            pcs.firePropertyChange(PLAYER_VALUE, null, null);
+        }
+        pcs.firePropertyChange(GAME_VALUE, null, null);
+        return result;
+    }
+    public boolean hasUndo() { return cm.hasUndo(); }
+    public boolean undo() {
+        if (cm.undo()) {
+            pcs.firePropertyChange(GAME_VALUE, null, null);
+            pcs.firePropertyChange(PLAYER_VALUE, null, null);
+            return true;
+        }
+        return false;
+    }
+    public boolean hasRedo() { return cm.hasRedo(); }
+    public boolean redo() {
+        if (cm.redo()) {
+            pcs.firePropertyChange(GAME_VALUE, null, null);
+            pcs.firePropertyChange(PLAYER_VALUE, null, null);
             return true;
         }
         return false;

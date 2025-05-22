@@ -1,6 +1,7 @@
 package pt.isec.pa.chess.ui;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -23,8 +24,9 @@ public class RootPane extends BorderPane { //View-Controller
     Pane center,right,left,top,bottom;
     Menu mnGame,mnMode;
     Label lblPlayer1,lblPlayer2,lblPlayerTurn;
-    MenuItem mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit;
-    CheckMenuItem mnNormal,mnLearning,mnPossibleMoves,mnUndo,mnRedo;
+    MenuItem mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit,mnUndo,mnRedo;
+    CheckMenuItem mnNormal,mnLearning,mnPossibleMoves;
+    Button soundButton;
     static String player1,player2,playerTurn = "WHITE";
     BoardUI boardui;
     boolean gameOver, gameDraw;
@@ -55,8 +57,8 @@ public class RootPane extends BorderPane { //View-Controller
         mnNormal= new CheckMenuItem("Normal");
         mnLearning = new CheckMenuItem("Learning");
         mnPossibleMoves = new CheckMenuItem("Possible Moves");
-        mnUndo = new CheckMenuItem("Undo");
-        mnRedo = new CheckMenuItem("Redo");
+        mnUndo = new MenuItem("Undo");
+        mnRedo = new MenuItem("Redo");
         mnMode.getItems().addAll(mnNormal,mnLearning,mnPossibleMoves,mnUndo,mnRedo);
         mnNormal.setSelected(true);
         mnPossibleMoves.setVisible(false);
@@ -143,6 +145,12 @@ public class RootPane extends BorderPane { //View-Controller
         lblPlayer1 = new Label();
         lblPlayer2 = new Label();
         lblPlayerTurn = new Label();
+
+        soundButton = new Button();
+        soundButton.setPrefSize(right.getPrefWidth(), 40);
+        soundButton.setText("Sound: " + game.getSound());
+        soundButton.prefWidthProperty().bind(Bindings.subtract(right.widthProperty(), 40));
+        soundButton.setTranslateX(15);
         labelsInfo();
 
 
@@ -155,7 +163,7 @@ public class RootPane extends BorderPane { //View-Controller
         setCenter(center);
         setBottom(bottom);
         center.getChildren().add(boardui.getCanvas());
-        right.getChildren().addAll(lblPlayer1,lblPlayer2,lblPlayerTurn);
+        right.getChildren().addAll(lblPlayer1,lblPlayer2,lblPlayerTurn,soundButton);
     }
 
     private void registerHandlers() {
@@ -291,6 +299,10 @@ public class RootPane extends BorderPane { //View-Controller
                 mnNormal.setSelected(oldVal);
         });
 
+        mnPossibleMoves.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            boardui.setPossibleMoves(newVal);
+        });
+
         mnNormal.selectedProperty().addListener((obs, oldVal, newVal) -> {
                 mnLearning.setSelected(oldVal);
         });
@@ -321,13 +333,46 @@ public class RootPane extends BorderPane { //View-Controller
         });
 
         game.addPropertyChangeListener(
-                game.PLAYER_VALUE, evt -> {
+            game.PLAYER_VALUE, evt -> {
                     labelsInfo();
+        });
+
+        soundButton.setOnAction(e -> {
+            if(game.getSound().equals("ON")) {
+                game.setSounds(false);
+                soundButton.setText("Sound: " + game.getSound());
+            }
+            else {
+                game.setSounds(true);
+                soundButton.setText("Sound: " + game.getSound());
+            }
+        });
+
+        mnRedo.setOnAction(e -> {
+            game.redo();
+        });
+
+        mnUndo.setOnAction(e -> {
+            game.undo();
         });
     }
 
     private void update() {
         /* update views */
+
+        if (game.hasRedo()) {
+            mnRedo.setDisable(false);
+        }
+        else {
+            mnRedo.setDisable(true);
+        }
+
+        if (game.hasUndo()) {
+            mnUndo.setDisable(false);
+        }
+        else {
+            mnUndo.setDisable(true);
+        }
 
         boardui.createCanvas();
         if (game.check(playerTurn)) {
