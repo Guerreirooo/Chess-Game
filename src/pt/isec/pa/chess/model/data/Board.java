@@ -55,6 +55,10 @@ public class Board implements Serializable {
         addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.a), PieceColor.WHITE);
     }
 
+    public void initGameEmpty(){
+        Pieces = new ArrayList<>();
+    }
+
     public void addPiece(PieceType pt, int row, ColumnType col, PieceColor color) {
         if (row < 1 || row > getBoardSize()) {
             return;
@@ -104,7 +108,7 @@ public class Board implements Serializable {
         PieceColor color = checkColorPosition(row, col);
         String nextMove = col.toString() + row;
 
-        if (piece.getPieceType() == PieceType.PAWN && ((row == 2 && piece.getColor() == PieceColor.BLACK) || (row == 7 && piece.getColor() == PieceColor.WHITE))) {
+        if (piece.getPieceType() == PieceType.PAWN && ((row == 2 && piece.getColor() == PieceColor.WHITE) || (row == 7 && piece.getColor() == PieceColor.BLACK))) {
             if (checkColorPosition(row, col) != piece.getColor()) {
                 remove(getPiece(row, col));
             }
@@ -133,7 +137,7 @@ public class Board implements Serializable {
         return true;
     }
 
-    public boolean move(Piece piece, int row, ColumnType col) {
+    public boolean move(Piece piece, int row, ColumnType col, boolean isCheck) {
         if (row > getBoardSize() || row < 1 || piece == null) {
             return false;
         }
@@ -141,7 +145,7 @@ public class Board implements Serializable {
         PieceColor color = checkColorPosition(row, col);
         String nextMove = col.toString() + row;
 
-        for (String moves: getPossibleMoves(piece.getRow(), piece.getColumn())) {
+        for (String moves: getPossibleMoves(piece.getRow(), piece.getColumn(), isCheck)) {
             if (moves.equals(nextMove) && color == null) {
                 piece.setRow(row);
                 piece.setCol(col);
@@ -170,8 +174,44 @@ public class Board implements Serializable {
         return null;
     }
 
-    public List<String> getPossibleMoves(int row, ColumnType col) {
+    public List<String> getPossibleMoves(int row, ColumnType col, boolean isCheck) {
+        if (isCheck) {
+            List<String> possibleMovesPiece = getPossibleMoves(getPiece(row, col));
+            List<String> movesToRunCheckmate = checkStopCheckMate(getPiece(row, col).getColor());
+            List<String> finalMoves = new ArrayList<>();
+
+            if (getPiece(row, col).getPieceType() == PieceType.KING) {
+                finalMoves.addAll(checkStopCheckMateKing(getPiece(row, col).getColor()));
+                return finalMoves;
+            }
+
+            for (String move: possibleMovesPiece) {
+                for (String moveToRun: movesToRunCheckmate) {
+                    if (move.equals(moveToRun)) {
+                        finalMoves.add(move);
+                    }
+                }
+            }
+            return finalMoves;
+        }
         return getPiece(row, col) == null ? new ArrayList<>(): getPiece(row, col).getPossibleMoves();
+    }
+
+    public List<String> getPossibleMoves(Piece p){
+        Board bTemp = new Board(this);
+        Board bTempCopy = new Board(bTemp);
+        List<String> possibleMoves = new ArrayList<>();
+
+        for (String move: p.getPossibleMoves()) {
+            ColumnType col = ColumnType.letra(move.split("")[0]);
+            int row = Integer.parseInt(move.split("")[1]);
+            bTempCopy.moveWithoutConfirmation(bTempCopy.getPiece(p.getRow(), p.getColumn()), row, col);
+            if (!check(p.getColor(), bTempCopy)) {
+                possibleMoves.add(move);
+            }
+            bTempCopy = new Board(bTemp);
+        }
+        return possibleMoves;
     }
 
     public boolean checkPiecesPosition(int row, ColumnType col) {
@@ -209,7 +249,7 @@ public class Board implements Serializable {
     public boolean checkMate() {
         for (Piece p : Pieces) {
             if (p.getPieceType() == PieceType.KING) {
-                if(!checkStopCheckMate(p.getColor())) {
+                if(checkStopCheckMate(p.getColor()).isEmpty() && checkStopCheckMateKing(p.getColor()).isEmpty()) {
                     return true;
                 }
             }
@@ -217,30 +257,54 @@ public class Board implements Serializable {
         return false;
     }
 
-    public boolean checkStopCheckMate(PieceColor kingColor) {
+    public List<String> checkStopCheckMateKing(PieceColor kingColor) {
         Board bTemp = new Board(this);
         Board bTempCopy = new Board(bTemp);
+        List<String> possibleMovesChecked = new ArrayList<>();
 
         for (Piece p: bTemp.getPiecesList()) {
-            if (p.getColor() != kingColor) {
+            if (p.getColor() != kingColor || p.getPieceType() != PieceType.KING) {
                 continue;
             }
 
             for (String move: p.getPossibleMoves()) {
                 ColumnType col = ColumnType.letra(move.split("")[0]);
                 int row = Integer.parseInt(move.split("")[1]);
-                bTempCopy.moveWithoutConfirmation(p, row, col);
+                bTempCopy.moveWithoutConfirmation(bTempCopy.getPiece(p.getRow(), p.getColumn()), row, col);
                 if (!check(kingColor, bTempCopy)) {
-                    return true;
+                    possibleMovesChecked.add(move);
                 }
                 bTempCopy = new Board(bTemp);
             }
         }
-        return false;
+        return possibleMovesChecked;
+    }
+
+    public List<String> checkStopCheckMate(PieceColor kingColor) {
+        Board bTemp = new Board(this);
+        Board bTempCopy = new Board(bTemp);
+        List<String> possibleMovesChecked = new ArrayList<>();
+
+        for (Piece p: bTemp.getPiecesList()) {
+            if (p.getColor() != kingColor || p.getPieceType() == PieceType.KING) {
+                continue;
+            }
+
+            for (String move: p.getPossibleMoves()) {
+                ColumnType col = ColumnType.letra(move.split("")[0]);
+                int row = Integer.parseInt(move.split("")[1]);
+                bTempCopy.moveWithoutConfirmation(bTempCopy.getPiece(p.getRow(), p.getColumn()), row, col);
+                if (!check(kingColor, bTempCopy)) {
+                    possibleMovesChecked.add(move);
+                }
+                bTempCopy = new Board(bTemp);
+            }
+        }
+        return possibleMovesChecked;
     }
 
     public boolean check(PieceColor playerColor, Board b) {
-        PiecePosition kingPos = getPos(PieceType.KING,playerColor);
+        PiecePosition kingPos = b.getPos(PieceType.KING,playerColor);
         List<String>pieceMoves = new ArrayList<>();
 
         for(Piece p: b.Pieces) {

@@ -13,7 +13,12 @@ public class Pawn extends Piece {
 
     public Pawn(Board board, PiecePosition position, PieceColor color) {
         super(board, position, color);
-        move = false;
+        if ((position.getRow() == 2 && color == PieceColor.WHITE) || (position.getRow() == 7 && color == PieceColor.BLACK)) {
+            move = false;
+        }
+        else {
+            move = true;
+        }
     }
 
     @Override
@@ -48,10 +53,10 @@ public class Pawn extends Piece {
         }
 
         for (int i = 0; i < n; i++) {
-            if (getColor() == PieceColor.WHITE) {
+            if (getColor() == PieceColor.BLACK) {
                 auxRow--;
             }
-            else if (getColor() == PieceColor.BLACK) {
+            else if (getColor() == PieceColor.WHITE) {
                 auxRow++;
             }
             else {
@@ -64,10 +69,10 @@ public class Pawn extends Piece {
         auxRow = getRow();
         auxCol = getColumn().equivalente();
 
-        if (getColor() == PieceColor.WHITE) {
+        if (getColor() == PieceColor.BLACK) {
             auxRow--;
         }
-        else if (getColor() == PieceColor.BLACK) {
+        else if (getColor() == PieceColor.WHITE) {
             auxRow++;
         }
 
@@ -77,10 +82,10 @@ public class Pawn extends Piece {
         auxRow = getRow();
         auxCol = getColumn().equivalente();
 
-        if (getColor() == PieceColor.WHITE) {
+        if (getColor() == PieceColor.BLACK) {
             auxRow--;
         }
-        else if (getColor() == PieceColor.BLACK) {
+        else if (getColor() == PieceColor.WHITE) {
             auxRow++;
         }
 

@@ -2,6 +2,8 @@ package pt.isec.pa.chess.ui;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.geometry.Insets;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
@@ -14,28 +16,33 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import pt.isec.pa.chess.model.*;
 import pt.isec.pa.chess.model.data.PieceColor;
+import pt.isec.pa.chess.model.data.PieceType;
+import pt.isec.pa.chess.model.data.pieces.MoveType;
+import pt.isec.pa.chess.model.data.pieces.Piece;
 
 import java.io.File;
 import java.util.Optional;
 
-public class RootPane extends BorderPane { //View-Controller
+public class RootPane extends BorderPane {
     ChessGameManager game;
     Stage stage;
     Pane center,right,left,top,bottom;
     Menu mnGame,mnMode;
     Label lblPlayer1,lblPlayer2,lblPlayerTurn;
-    MenuItem mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit,mnUndo,mnRedo;
+    MenuItem mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit,mnUndo,mnRedo,mnEditor;
     CheckMenuItem mnNormal,mnLearning,mnPossibleMoves;
     Button soundButton;
     static String player1,player2,playerTurn = "WHITE";
     BoardUI boardui;
-    boolean gameOver, gameDraw;
+    boolean gameOver, gameDraw, editor;
+    String selectedColor;
 
     public RootPane(ChessGameManager data, Stage stage) {
         this.game = data;
         this.stage = stage;
         gameOver = false;
         gameDraw = false;
+        editor = false;
 
         createViews();
         registerHandlers();
@@ -46,12 +53,13 @@ public class RootPane extends BorderPane { //View-Controller
         MenuBar mb = new MenuBar();
         mnGame = new Menu("Game");
         mnNew = new MenuItem("New");
+        mnEditor = new MenuItem("New (Editor Mode)");
         mnOpen = new MenuItem("Open");
         mnSave = new MenuItem("Save");
         mnImport = new MenuItem("Import");
         mnExport = new MenuItem("Export");
         mnQuit = new MenuItem("Quit");
-        mnGame.getItems().addAll(mnNew,mnOpen,mnSave,mnImport,mnExport,mnQuit);
+        mnGame.getItems().addAll(mnNew,mnEditor,mnOpen,mnSave,mnImport,mnExport,mnQuit);
 
         mnMode = new Menu("Mode");
         mnNormal= new CheckMenuItem("Normal");
@@ -66,9 +74,91 @@ public class RootPane extends BorderPane { //View-Controller
         mnRedo.setVisible(false);
 
 
-
         mb.getMenus().addAll(mnGame,mnMode);
         return mb;
+    }
+
+    private void promotePawn() {
+        if (!boardui.getPromote())
+            return;
+
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("Promoção de Peão");
+        alert.setHeaderText("Escolhe uma peça para promover:");
+
+        // Criação dos botões
+        ButtonType queenBtn = new ButtonType("Rainha");
+        ButtonType rookBtn = new ButtonType("Torre");
+        ButtonType bishopBtn = new ButtonType("Bispo");
+        ButtonType knightBtn = new ButtonType("Cavalo");
+
+        alert.getButtonTypes().setAll(queenBtn, rookBtn, bishopBtn, knightBtn);
+
+        // Mostra e espera pela escolha do utilizador
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent()) {
+            if (result.get() == queenBtn) {
+                boardui.promotePawn(PieceType.QUEEN);
+            } else if (result.get() == rookBtn) {
+                boardui.promotePawn(PieceType.ROOK);
+            } else if (result.get() == bishopBtn) {
+                boardui.promotePawn(PieceType.BISHOP);
+            } else if (result.get() == knightBtn) {
+                boardui.promotePawn(PieceType.KNIGHT);
+            }
+        }
+    }
+
+    private PieceType getPieceAdd() {
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("Adicionar peça");
+        alert.setHeaderText("Escolhe uma peça para adicionar:");
+
+        ComboBox<String> colorBox = new ComboBox<>();
+        colorBox.getItems().addAll("White", "Black");
+        colorBox.setValue("White");
+
+        // Layout personalizado
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(10));
+        content.getChildren().add(new Label("Choose color:"));
+        content.getChildren().add(colorBox);
+
+        alert.getDialogPane().setContent(content);
+
+        // Criação dos botões
+        ButtonType queenBtn = new ButtonType("Rainha");
+        ButtonType kingBtn = new ButtonType("Rei");
+        ButtonType rookBtn = new ButtonType("Torre");
+        ButtonType bishopBtn = new ButtonType("Bispo");
+        ButtonType knightBtn = new ButtonType("Cavalo");
+        ButtonType pawnBtn = new ButtonType("Peão");
+        ButtonType cancelBtn = ButtonType.CANCEL;
+
+        alert.getButtonTypes().setAll(queenBtn, kingBtn, rookBtn, bishopBtn, knightBtn, pawnBtn,cancelBtn);
+
+        // Mostra e espera pela escolha do utilizador
+        Optional<ButtonType> result = alert.showAndWait();
+
+        if (result.isPresent() && result.get() != cancelBtn) {
+            selectedColor = colorBox.getValue();
+            if (result.get() == queenBtn) {
+                return PieceType.QUEEN;
+            }
+            else if (result.get() == kingBtn) {
+                return PieceType.KING;
+            } else if (result.get() == rookBtn) {
+                return PieceType.ROOK;
+            } else if (result.get() == bishopBtn) {
+                return PieceType.BISHOP;
+            } else if (result.get() == knightBtn) {
+                return PieceType.KNIGHT;
+            }else if (result.get() == pawnBtn) {
+                return PieceType.PAWN;
+            }
+        }
+        return null;
     }
 
     private String askPlayerName(String player) {
@@ -128,7 +218,7 @@ public class RootPane extends BorderPane { //View-Controller
         /* create and configure views */
         center = new Pane();
         center.setStyle("-fx-background-color: #D3D3D3");
-        boardui = new BoardUI(800, 800, game);
+        boardui = new BoardUI(800,800,game);
 
         top = new Pane();
         top.setPrefHeight(50);
@@ -148,7 +238,7 @@ public class RootPane extends BorderPane { //View-Controller
 
         soundButton = new Button();
         soundButton.setPrefSize(right.getPrefWidth(), 40);
-        soundButton.setText("Sound: " + game.getSound());
+        soundButton.setText("Sound: " + boardui.getSound());
         soundButton.prefWidthProperty().bind(Bindings.subtract(right.widthProperty(), 40));
         soundButton.setTranslateX(15);
         labelsInfo();
@@ -175,7 +265,30 @@ public class RootPane extends BorderPane { //View-Controller
             if(player1 != null || player2 != null) {
                 gameOver = false;
                 gameDraw = false;
+
+                boardui.setWidth(center.getWidth());
+                boardui.setHeight(center.getHeight());
+
                 game.initGame(player1, player2);
+                game.setCurrentPlayer(PieceColor.WHITE);
+                game.setNumMovements(0);
+                editor = false;
+            }
+        });
+
+        mnEditor.setOnAction(e -> {
+            player1 = askPlayerName("Jogador 1 (Pretas)");
+            player2 = askPlayerName("Jogador 2 (Brancas)");
+
+            if(player1 != null || player2 != null) {
+                gameOver = false;
+                gameDraw = false;
+
+                boardui.setWidth(center.getWidth());
+                boardui.setHeight(center.getHeight());
+
+                game.initGameEmpty(player1, player2);
+                editor = true;
                 game.setCurrentPlayer(PieceColor.WHITE);
                 game.setNumMovements(0);
             }
@@ -186,7 +299,8 @@ public class RootPane extends BorderPane { //View-Controller
             fileChooser.setTitle("Carregar Jogo");
 
             FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
-            fileChooser.getExtensionFilters().add(extFilter);
+            FileChooser.ExtensionFilter extFilterCsv = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.csv)", "*.csv");
+            fileChooser.getExtensionFilters().addAll(extFilter, extFilterCsv);
 
             File file = fileChooser.showOpenDialog(stage);
 
@@ -216,9 +330,24 @@ public class RootPane extends BorderPane { //View-Controller
             fileChooser.setTitle("Guardar Jogo (serialização)");
 
             FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
-            fileChooser.getExtensionFilters().add(extFilter);
+            FileChooser.ExtensionFilter extFilterCsv = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.csv)", "*.csv");
+            fileChooser.getExtensionFilters().addAll(extFilter, extFilterCsv);
 
             File file = fileChooser.showSaveDialog(stage);
+
+            boolean temp = false;
+            if(editor){
+                temp = boardui.checkKings();
+                if(!temp){
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Erro ao salvar jogo");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("É necessário ter um rei para cada cor");
+                    errorAlert.showAndWait();
+                    return;
+                }
+            }
+
             if (file != null) {
                 if (!game.save(file.getAbsolutePath())) {
                     Alert errorAlert = new Alert(Alert.AlertType.ERROR);
@@ -241,7 +370,8 @@ public class RootPane extends BorderPane { //View-Controller
             fileChooser.setTitle("Carregar Jogo");
 
             FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
-            fileChooser.getExtensionFilters().add(extFilter);
+            FileChooser.ExtensionFilter extFilterCsv = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.csv)", "*.csv");
+            fileChooser.getExtensionFilters().addAll(extFilter, extFilterCsv);
 
             File file = fileChooser.showOpenDialog(stage);
 
@@ -271,10 +401,23 @@ public class RootPane extends BorderPane { //View-Controller
             fileChooser.setTitle("Abrir Jogo");
 
             FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.txt)", "*.txt");
-            fileChooser.getExtensionFilters().add(extFilter);
+            FileChooser.ExtensionFilter extFilterCsv = new FileChooser.ExtensionFilter("Ficheiro do Jogo (*.csv)", "*.csv");
+            fileChooser.getExtensionFilters().addAll(extFilter, extFilterCsv);
 
             File file = fileChooser.showOpenDialog(stage);
 
+            boolean temp = false;
+            if(editor){
+                temp = boardui.checkKings();
+                if(!temp){
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Erro ao salvar jogo");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("É necessário ter um rei para cada cor");
+                    errorAlert.showAndWait();
+                    return;
+                }
+            }
             if (file != null) {
                 if (!game.exportGame(file.getAbsolutePath())) {
                     Alert errorAlert = new Alert(Alert.AlertType.ERROR);
@@ -324,7 +467,14 @@ public class RootPane extends BorderPane { //View-Controller
         });
 
         boardui.setOnMousePressed(mouseEvent -> {
-            boardui.onPressed(mouseEvent.getSceneX(), mouseEvent.getSceneY(), gameOver, gameDraw);
+            Point2D localCoords = boardui.sceneToLocal(mouseEvent.getSceneX(), mouseEvent.getSceneY());
+            if(editor){
+                PieceType piece = getPieceAdd();
+                boardui.addPiece(localCoords.getX(), localCoords.getY(), piece, selectedColor);
+            }
+            else {
+                boardui.onPressed(localCoords.getX(), localCoords.getY(), gameOver, gameDraw);
+            }
         });
 
         game.addPropertyChangeListener(
@@ -337,14 +487,24 @@ public class RootPane extends BorderPane { //View-Controller
                     labelsInfo();
         });
 
+        game.addPropertyChangeListener(
+                game.EDITOR_VALUE, evt -> {
+                    boardui.createCanvas();
+                });
+
+        boardui.addPropertyChangeListener(
+                boardui.PROMOTE_VALUE, evt -> {
+                    promotePawn();
+                });
+
         soundButton.setOnAction(e -> {
-            if(game.getSound().equals("ON")) {
-                game.setSounds(false);
-                soundButton.setText("Sound: " + game.getSound());
+            if(boardui.getSound().equals("ON")) {
+                boardui.setSounds(false);
+                soundButton.setText("Sound: " + boardui.getSound());
             }
             else {
-                game.setSounds(true);
-                soundButton.setText("Sound: " + game.getSound());
+                boardui.setSounds(true);
+                soundButton.setText("Sound: " + boardui.getSound());
             }
         });
 
@@ -375,11 +535,12 @@ public class RootPane extends BorderPane { //View-Controller
         }
 
         boardui.createCanvas();
-        if (game.check(playerTurn)) {
+        System.out.println("check: " + game.check(playerTurn) + "\ncheckMate: " + game.checkMate());
+        if (game.check(playerTurn) && game.checkMate()) {
             gameOver = true;
-            if (game.checkMate()) {
-                gameOver = true;
-            }
+//            if (game.checkMate()) {
+//                gameOver = true;
+//            }
         }
         if (game.drownedKing() && game.getNumMovements() > 10) {
             gameDraw = true;

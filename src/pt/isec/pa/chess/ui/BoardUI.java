@@ -7,32 +7,100 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import pt.isec.pa.chess.model.ChessGameManager;
 import pt.isec.pa.chess.model.data.ColumnType;
+import pt.isec.pa.chess.model.data.PieceColor;
+import pt.isec.pa.chess.model.data.PieceType;
 import pt.isec.pa.chess.model.data.pieces.MoveType;
 import pt.isec.pa.chess.model.data.pieces.Piece;
+import pt.isec.pa.chess.ui.res.SoundManager;
 import pt.isec.pa.chess.ui.res.images.ImageManager;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BoardUI extends Canvas {
     String[] letters = {"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
     boolean selecionado = false;
     boolean possibleMoves = false;
+    boolean sounds = false;
+    boolean promote = false;
     ChessGameManager game;
     double xi, yi, xf, yf;
     int SquareSize = 70;
+    PropertyChangeSupport pcs;
+    public static final String PROMOTE_VALUE = "promote";
 
     BoardUI(int x, int y, ChessGameManager game) {
         setWidth(x);
         setHeight(y);
         this.game = game;
+        pcs = new PropertyChangeSupport(this);
+    }
+
+    public void addPropertyChangeListener(String property, PropertyChangeListener listener) {
+        pcs.addPropertyChangeListener(property,listener);
     }
 
     public void setPossibleMoves(boolean newValue){
         this.possibleMoves = newValue;
     }
 
+    public String getSound(){
+        if(sounds){
+            return "ON";
+        }
+        return "OFF";
+    }
+
+    public boolean getPromote(){return promote;}
+
+    public void setPromote(boolean promote){this.promote = promote;}
+
+    public void setSounds(boolean sounds) {
+        this.sounds = sounds;
+    }
+
+    public void findSounds(List<String> fileNames) {
+        List<String> filesTemp = new ArrayList<>();
+        List<String> lista = new ArrayList<>();
+        lista.add(".mp3");
+        lista.add(".wav");
+
+        for(String filename : fileNames) {
+            for (String s : lista) {
+                if (SoundManager.getSound(filename + s)) {
+                    filesTemp.add(filename + s);
+                    break;
+                }
+            }
+        }
+
+        SoundManager.playSequence(filesTemp);
+    }
+
+    public void playSounds(Piece temp,ColumnType colOrigin,int rowOrigin,boolean capture) {
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add(temp.getColor().toString().toLowerCase());
+        fileNames.add(temp.getPieceType().toString().toLowerCase());
+        fileNames.add(colOrigin.toString().toLowerCase());
+        fileNames.add(rowOrigin + "");
+        fileNames.add(temp.getColumn().toString().toLowerCase());
+        fileNames.add(game.mudarNumeros(temp.getRow())+"");
+
+        if(capture){
+            fileNames.add("capture");
+        }
+
+        if(game.check(game.getCurrentPlayer().toString())){
+            fileNames.add("check");
+        }
+
+        findSounds(fileNames);
+    }
+
     void createCanvas() {
-        int SquareSize = 70;
+        int SquareSize = (int)getWidth()/10;
         int boardSize = game.getBoardSize();
         int labelMargin = SquareSize;
         int canvasSize = SquareSize * boardSize + 2 * labelMargin;
@@ -41,17 +109,18 @@ public class BoardUI extends Canvas {
         this.setHeight(canvasSize);
 
         GraphicsContext gc = this.getGraphicsContext2D();
+        gc.clearRect(0, 0, getWidth(), getHeight());
         gc.setFont(new Font("Arial", 20));
         gc.setFill(Color.BLACK);
 
         for (int i = 0; i < boardSize; i++) {
-            gc.fillText(letters[i], labelMargin + i * SquareSize + labelMargin / 2.0 - 5, labelMargin / 2.0 + 30); // topo
-            gc.fillText(letters[i], labelMargin + i * SquareSize + labelMargin / 2.0 - 5, canvasSize - labelMargin / 2.0 - 20); // fundo
+            gc.fillText(letters[i], labelMargin + i * SquareSize + labelMargin / 2.0 - (this.getHeight()/140), labelMargin / 2.0 + (this.getHeight()/35)); // topo
+            gc.fillText(letters[i], labelMargin + i * SquareSize + labelMargin / 2.0 - (this.getHeight()/140), canvasSize - labelMargin / 2.0 - (this.getHeight()/70)); // fundo
         }
 
         for (int i = 0; i < boardSize; i++) {
-            gc.fillText(String.valueOf(boardSize - i), labelMargin / 2.0 + 20, labelMargin + i * SquareSize + labelMargin / 2.0 + 5); // esquerda
-            gc.fillText(String.valueOf(boardSize - i), canvasSize - labelMargin / 2.0 - 30, labelMargin + i * SquareSize + labelMargin / 2.0 + 5); // direita
+            gc.fillText(String.valueOf(boardSize - i), labelMargin / 2.0 , labelMargin + i * SquareSize + labelMargin / 2.0 + (this.getWidth()/140)); // esquerda
+            gc.fillText(String.valueOf(boardSize - i), canvasSize - labelMargin / 2.0 - (this.getWidth()/70), labelMargin + i * SquareSize + labelMargin / 2.0 + (this.getWidth()/140)); // direita
         }
 
         for (int row = 0; row < boardSize; row++) {
@@ -62,7 +131,7 @@ public class BoardUI extends Canvas {
                 gc.setFill(javafx.scene.paint.Color.web(color));
                 gc.fillRect(labelMargin + col * SquareSize, labelMargin + row * SquareSize, SquareSize, SquareSize);
                 if(image != null) {
-                    gc.drawImage(ImageManager.getImage(image), labelMargin + col * SquareSize, labelMargin + row * SquareSize, 70, 70);
+                    gc.drawImage(ImageManager.getImage(image), labelMargin + col * SquareSize, labelMargin + row * SquareSize, (int)this.getWidth()/10, (int)this.getWidth()/10);
                 }
             }
         }
@@ -73,7 +142,16 @@ public class BoardUI extends Canvas {
         return this;
     }
 
+    public void addPiece(double mouseX, double mouseY, PieceType piece, String selectedColor) {
+        xi = convertCordinatesY(mouseX);
+        yi = convertCordinatesX(mouseY);
+        PieceColor temp = PieceColor.translate(selectedColor.toUpperCase());
+
+        game.addPiece((int)xi,(int)yi,piece,temp);
+    }
+
     public void onPressed(double mouseX, double mouseY, boolean gameOver, boolean gameDraw) {
+        MoveType result;
         if (gameOver) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Fim do Jogo");
@@ -94,17 +172,27 @@ public class BoardUI extends Canvas {
 
         xf = xi;
         yf = yi;
-        xi = mouseX;
-        yi = mouseY;
+        xi = convertCordinatesY(mouseX);
+        yi = convertCordinatesX(mouseY);
 
         if(selecionado){
             selecionado = false;
-            if (game.move(xf,yf,xi,yi) == MoveType.PROMOTE) {
+            Piece temp = game.getPiece((int)yf,(int)xf);
+            boolean capture = game.havePiece((int)yi,(int)xi);
+            result = game.move(xf,yf,xi,yi);
+            if(result != MoveType.FALSE) {
+                if(sounds) {
+                    playSounds(temp, ColumnType.letra((int)xf), game.mudarNumeros((int)yf), capture);
+                }
+                if (result == MoveType.PROMOTE) {
+                    setPromote(true);
+                    pcs.firePropertyChange(PROMOTE_VALUE, null, null);
+                }
             }
         }
         else{
-            int row = convertCordinatesY(xi);
-            int col = convertCordinatesX(yi);
+            int row = (int)xi;
+            int col = (int)yi;
             if(seleciona(col,row) && possibleMoves == true) {
                 selecionaPossibleMoves(col, row);
             }
@@ -112,7 +200,20 @@ public class BoardUI extends Canvas {
         }
     }
 
+    public void promotePawn(PieceType newPiece){
+        int row = (int)yi;
+        int col = (int)xi;
+
+        if(game.promotePawn(row,ColumnType.letra(col),newPiece))
+            selecionado = false;
+    }
+
+    public boolean checkKings (){
+        return game.checkKings();
+    }
+
     private boolean seleciona(int xi, int yi) {
+        int SquareSize = (int)this.getWidth()/10;
         if(game.havePiece(xi, yi)){
             Piece pieceAux = game.getPiece(xi, yi);
             if (pieceAux == null){
@@ -129,27 +230,31 @@ public class BoardUI extends Canvas {
         return false;
     }
 
-    private int convertCordinatesY(double xi) {
-        int tabuleiroX = 170;
+    private int convertCordinatesX(double localY) {
+        int squareSize = (int) getHeight() / 10;
+        int labelMargin = squareSize;
 
-        double localY = xi - tabuleiroX;
+        double yInsideBoard = localY - labelMargin;
+        int row = (int)(yInsideBoard / squareSize) + 1;
 
-        int col = (int)(localY / SquareSize) + 1;
-        return col;
-    }
-
-    private int convertCordinatesX(double yi) {
-        int tabuleiroY = 144;
-
-        double localX = yi - tabuleiroY;
-
-        int row = (int)(localX / SquareSize) + 1;
         return row;
     }
 
+    private int convertCordinatesY(double localX) {
+        int squareSize = (int) getWidth() / 10;
+        int labelMargin = squareSize;
+
+        double xInsideBoard = localX - labelMargin;
+        int col = (int)(xInsideBoard / squareSize) + 1;
+
+        return col;
+    }
+
+
     private void selecionaPossibleMoves(int row, int col) {
+        int SquareSize = (int)this.getWidth()/10;
         Piece temp = game.getPiece(row,col);
-        List<String> tempMoves = temp.getPossibleMoves();
+        List<String> tempMoves = game.getPossibleMoves(temp);
         ColumnType colunaTemp;
         String coluna;
         int colunaNum;

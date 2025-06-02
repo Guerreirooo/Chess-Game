@@ -22,6 +22,7 @@ public enum PieceType {
 
     public static Piece createPiece(Board board, String representation) {
         representation = representation.replaceAll("\n", "");
+        representation = representation.replaceAll(" ", "");
         if (representation.split("").length < 3 || PieceColor.translate(representation) != null || representation.equals("\n")) {
             return null;
         }

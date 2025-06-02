@@ -7,6 +7,8 @@ public enum PieceColor {
         return switch (representation) {
             case "BLACK" -> BLACK;
             case "WHITE" -> WHITE;
+            case "black" -> BLACK;
+            case "white" -> WHITE;
             default -> null;
         };
     }
