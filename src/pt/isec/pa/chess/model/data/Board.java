@@ -31,28 +31,28 @@ public class Board implements Serializable {
 
     public void initGame(){
         Pieces = new ArrayList<>();
-        addPiece(PieceType.ROOK, new PiecePosition(1, ColumnType.h),  PieceColor.BLACK);
-        addPiece(PieceType.KNIGHT, new PiecePosition(1, ColumnType.g), PieceColor.BLACK);
-        addPiece(PieceType.BISHOP, new PiecePosition(1, ColumnType.f), PieceColor.BLACK);
-        addPiece(PieceType.QUEEN, new PiecePosition(1, ColumnType.d), PieceColor.BLACK);
-        addPiece(PieceType.KING, new PiecePosition(1, ColumnType.e), PieceColor.BLACK);
-        addPiece(PieceType.BISHOP, new PiecePosition(1, ColumnType.c), PieceColor.BLACK);
-        addPiece(PieceType.KNIGHT, new PiecePosition(1, ColumnType.b), PieceColor.BLACK);
-        addPiece(PieceType.ROOK, new PiecePosition(1, ColumnType.a), PieceColor.BLACK);
+        addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.h),  PieceColor.BLACK);
+        addPiece(PieceType.KNIGHT, new PiecePosition(8, ColumnType.g), PieceColor.BLACK);
+        addPiece(PieceType.BISHOP, new PiecePosition(8, ColumnType.f), PieceColor.BLACK);
+        addPiece(PieceType.QUEEN, new PiecePosition(8, ColumnType.d), PieceColor.BLACK);
+        addPiece(PieceType.KING, new PiecePosition(8, ColumnType.e), PieceColor.BLACK);
+        addPiece(PieceType.BISHOP, new PiecePosition(8, ColumnType.c), PieceColor.BLACK);
+        addPiece(PieceType.KNIGHT, new PiecePosition(8, ColumnType.b), PieceColor.BLACK);
+        addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.a), PieceColor.BLACK);
 
         for(ColumnType c : ColumnType.values()){
-            addPiece(PieceType.PAWN, new PiecePosition(2, c), PieceColor.BLACK);
-            addPiece(PieceType.PAWN, new PiecePosition(7, c), PieceColor.WHITE);
+            addPiece(PieceType.PAWN, new PiecePosition(7, c), PieceColor.BLACK);
+            addPiece(PieceType.PAWN, new PiecePosition(2, c), PieceColor.WHITE);
         }
 
-        addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.h), PieceColor.WHITE);
-        addPiece(PieceType.KNIGHT, new PiecePosition(8, ColumnType.g), PieceColor.WHITE);
-        addPiece(PieceType.BISHOP, new PiecePosition(8, ColumnType.f), PieceColor.WHITE);
-        addPiece(PieceType.KING, new PiecePosition(8, ColumnType.e), PieceColor.WHITE);
-        addPiece(PieceType.QUEEN, new PiecePosition(8, ColumnType.d), PieceColor.WHITE);
-        addPiece(PieceType.BISHOP, new PiecePosition(8, ColumnType.c), PieceColor.WHITE);
-        addPiece(PieceType.KNIGHT, new PiecePosition(8, ColumnType.b), PieceColor.WHITE);
-        addPiece(PieceType.ROOK, new PiecePosition(8, ColumnType.a), PieceColor.WHITE);
+        addPiece(PieceType.ROOK, new PiecePosition(1, ColumnType.h), PieceColor.WHITE);
+        addPiece(PieceType.KNIGHT, new PiecePosition(1, ColumnType.g), PieceColor.WHITE);
+        addPiece(PieceType.BISHOP, new PiecePosition(1, ColumnType.f), PieceColor.WHITE);
+        addPiece(PieceType.KING, new PiecePosition(1, ColumnType.e), PieceColor.WHITE);
+        addPiece(PieceType.QUEEN, new PiecePosition(1, ColumnType.d), PieceColor.WHITE);
+        addPiece(PieceType.BISHOP, new PiecePosition(1, ColumnType.c), PieceColor.WHITE);
+        addPiece(PieceType.KNIGHT, new PiecePosition(1, ColumnType.b), PieceColor.WHITE);
+        addPiece(PieceType.ROOK, new PiecePosition(1, ColumnType.a), PieceColor.WHITE);
     }
 
     public void initGameEmpty(){

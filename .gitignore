@@ -28,3 +28,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 # Project exclude paths
+.idea/
+ChessGame.txt
+PartialGame.txt
+SerializationGame.txt
+teste.txt 
