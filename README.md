@@ -1,4 +1,4 @@
-Chess Game — JavaFX Chess Application
+## Chess Game — JavaFX Chess Application
 
 ## Overview
 
