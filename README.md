@@ -2,7 +2,7 @@
 
 ## Overview
 
-Chess Game is a desktop chess application developed in **Java** with **JavaFX**, created as an object-oriented programming project to practice software architecture, game logic, graphical user interfaces, persistence, and automated testing.
+Chess Game is a desktop chess application developed in **Java** with **JavaFX**, created as an object-oriented programming project to practice software architecture, game logic, graphical user interfaces and persistence.
 
 The application implements a playable chess board with support for piece movement, captures, castling, pawn promotion, turn management, and game-state handling. The project follows the **Model-View-ViewModel (MVVM)** architectural pattern, keeping the chess domain logic separated from the JavaFX presentation layer.
 
@@ -13,8 +13,6 @@ The project is structured around three main concerns:
 * **Model** — chess pieces, board state, rules, and game logic
 * **View** — JavaFX graphical interface
 * **ViewModel** — communication between the game model and the graphical interface
-
-The repository also includes a dedicated test suite for validating the application's behaviour.
 
 ---
 
@@ -158,13 +156,6 @@ The application needs to preserve the relevant state of the game so that it can 
 
 Java serialization was used to address this requirement.
 
-### Testing Game Logic
-
-Chess contains many edge cases, making automated testing particularly useful.
-
-A movement rule that works for one position may fail when pieces are blocking the path or when a capture occurs. Testing therefore helps ensure that changes to the game logic do not introduce regressions.
-
----
 
 ## Future Improvements
 
